@@ -11,19 +11,42 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Guardar trade si viene en el body
+
+    // Guardar trade manual
     if (req.body.saveTrade) {
       var trade = req.body.saveTrade
+      if (trade.id && typeof trade.id === 'number' && trade.id > 1000000000) {
+        // ID generado localmente, insertar nuevo
+        delete trade.id
+        await supabase.from('trades').insert(trade)
+      } else if (trade.id) {
+        // ID de Supabase, actualizar existente
+        var id = trade.id
+        delete trade.id
+        await supabase.from('trades').update(trade).eq('id', id)
+      } else {
+        await supabase.from('trades').insert(trade)
+      }
+      return res.status(200).json({ ok: true })
+    }
+
+    // Guardar trade automatico desde MT5 (pendiente)
+    if (req.body.saveTradeAuto) {
+      var trade = req.body.saveTradeAuto
       await supabase.from('trades').insert(trade)
       return res.status(200).json({ ok: true })
     }
-// Guardar trade automatico desde MT5 (pendiente de completar)
-if (req.body.saveTradeAuto) {
-  var trade = req.body.saveTradeAuto
-  await supabase.from('trades').insert(trade)
-  return res.status(200).json({ ok: true })
-}
-    // Guardar cuenta si viene en el body
+
+    // Completar trade pendiente
+    if (req.body.completeTrade) {
+      var data = req.body.completeTrade
+      var id = data.id
+      delete data.id
+      await supabase.from('trades').update(data).eq('id', id)
+      return res.status(200).json({ ok: true })
+    }
+
+    // Guardar cuenta
     if (req.body.saveAccount) {
       var account = req.body.saveAccount
       var result = await supabase.from('accounts').insert(account).select()
@@ -49,7 +72,7 @@ if (req.body.saveTradeAuto) {
       var traderId = req.body.loadData
       var trader = await supabase.from('traders').select('*').eq('id', traderId).single()
       var accounts = await supabase.from('accounts').select('*').eq('trader_id', traderId)
-      var trades = await supabase.from('trades').select('*').eq('trader_id', traderId)
+      var trades = await supabase.from('trades').select('*').eq('trader_id', traderId).order('created_at')
       var messages = await supabase.from('chat_messages').select('*').eq('trader_id', traderId).order('created_at')
       return res.status(200).json({
         trader: trader.data,
@@ -59,7 +82,14 @@ if (req.body.saveTradeAuto) {
       })
     }
 
-    // Llamada a la IA de Anthropic
+    // Verificar trades pendientes (para polling)
+    if (req.body.checkPending) {
+      var traderId = req.body.checkPending
+      var result = await supabase.from('trades').select('*').eq('trader_id', traderId).eq('status', 'pending').order('created_at')
+      return res.status(200).json({ pending: result.data || [] })
+    }
+
+    // Llamada a la IA
     var response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
