@@ -645,6 +645,12 @@ export default function App({session}){
           <SecLabel c="Gestion de cuentas" />
           {accounts.map(function(a){return(<div key={a.id} style={Object.assign({},styCard,{borderLeft:"2px solid "+(activeAccId===a.id?G:BD)})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><span style={{color:activeAccId===a.id?G:TX,fontSize:14}}>{a.name}</span><div style={{display:"flex",gap:8}}>{activeAccId!==a.id&&<button style={Object.assign({},styBtn,{padding:"4px 10px",fontSize:11})} onClick={function(){setActiveAccId(a.id);}}>Activar</button>}{accounts.length>1&&<button style={Object.assign({},styBtn,{padding:"4px 10px",fontSize:11,borderColor:"#C84B4B",color:"#C84B4B"})} onClick={function(){setAccounts(function(ac){return ac.filter(function(x){return x.id!==a.id;});});}}>Eliminar</button>}</div></div><div style={{fontSize:12,color:TX2}}>Saldo: <span style={{color:G}}>${a.balance}</span> — Riesgo: {a.riskPct}% — {a.type}</div></div>);})}
           <div style={styCardG}>
+            <div style={styCardG}>
+  <div style={{color:G,fontSize:11,textTransform:"uppercase",marginBottom:12}}>Tu ID para el EA de MT5</div>
+  <div style={{padding:"10px 14px",background:"#000",borderRadius:8,border:"1px solid "+BD2,fontSize:12,color:TX,letterSpacing:"0.05em",wordBreak:"break-all",marginBottom:10}}>{userId}</div>
+  <div style={{fontSize:11,color:TX3,marginBottom:10}}>Copia este ID y pegalo en el EA de MT5 donde dice TraderID</div>
+  <button style={Object.assign({},styBtn,{width:"100%"})} onClick={function(){navigator.clipboard.writeText(userId||"");alert("ID copiado!");}}>Copiar ID</button>
+</div>
             <div style={{color:G,fontSize:11,textTransform:"uppercase",marginBottom:12}}>Agregar nueva cuenta</div>
             <Lbl c="Nombre de la cuenta" />
             <StableInput value={newAccName} onChange={function(v){setNewAccName(v);}} placeholder="Ej: FTMO 50K, Cuenta Real..." />
