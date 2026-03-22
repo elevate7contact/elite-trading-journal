@@ -30,11 +30,21 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true })
     }
 
-    // Guardar trade automatico desde MT5 (pendiente)
-    if (req.body.saveTradeAuto) {
-      var trade = req.body.saveTradeAuto
-      await supabase.from('trades').insert(trade)
-      return res.status(200).json({ ok: true })
+   // Guardar trade automatico desde MT5 (pendiente)
+if (req.body.saveTradeAuto) {
+  var trade = req.body.saveTradeAuto
+  var existing = await supabase.from('trades')
+    .select('id')
+    .eq('trader_id', trade.trader_id)
+    .eq('trade_date', trade.trade_date)
+    .eq('pair', trade.pair)
+    .eq('pnl', trade.pnl)
+    .eq('status', 'pending')
+  if (!existing.data || existing.data.length === 0) {
+    await supabase.from('trades').insert(trade)
+  }
+  return res.status(200).json({ ok: true })
+
     }
 
     // Completar trade pendiente
