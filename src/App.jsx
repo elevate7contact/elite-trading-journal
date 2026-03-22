@@ -204,11 +204,17 @@ var popupNotesS=useState("");var popupNotes=popupNotesS[0],setPopupNotes=popupNo
         setAccounts(data.accounts.map(function(a){return{id:a.id,name:a.name,balance:a.balance,type:a.type,riskPct:a.risk_pct,funding:a.funding||{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}};}));
         setActiveAccId(data.accounts[0].id);
       }
-     if(data.trades&&data.trades.length>0){
+if(data.trades&&data.trades.length>0){
   var pending=data.trades.filter(function(t){return t.status==="pending";});
   var complete=data.trades.filter(function(t){return t.status!=="pending";});
   setTrades(complete.map(function(t){return{id:t.id,date:t.trade_date,pair:t.pair,dir:t.direction,entry:t.entry,exit_price:t.exit_price,lot_size:t.lot_size,duration:t.duration,sl:t.sl,tp:t.tp,result:t.result,pnl:t.pnl,rr:t.rr,emotion:t.emotion,followed:t.followed,errors:t.errors||[],notes:t.notes,accountId:t.account_id,status:t.status};}));
   if(pending.length>0){
+    setPendingTrades(pending);
+    setPopupTrade(pending[0]);
+    setShowPopup(true);
+  }
+}
+      if(pending.length>0){
     setPendingTrades(pending);
     setPopupTrade(pending[0]);
     setShowPopup(true);
