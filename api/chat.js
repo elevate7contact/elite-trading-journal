@@ -17,7 +17,12 @@ export default async function handler(req, res) {
       await supabase.from('trades').insert(trade)
       return res.status(200).json({ ok: true })
     }
-
+// Guardar trade automatico desde MT5 (pendiente de completar)
+if (req.body.saveTradeAuto) {
+  var trade = req.body.saveTradeAuto
+  await supabase.from('trades').insert(trade)
+  return res.status(200).json({ ok: true })
+}
     // Guardar cuenta si viene en el body
     if (req.body.saveAccount) {
       var account = req.body.saveAccount
