@@ -295,7 +295,18 @@ export default function App({session}){
     setChatLoading(false);
     setTimeout(function(){if(chatInputRef.current)chatInputRef.current.focus();},100);
   }
-
+ async function crearCuenta(){
+  if(newAccName.trim()){
+    var id=Date.now();
+    if(userId){
+      var r=await apiCall({saveAccount:{trader_id:userId,name:newAccName.trim(),balance:"10000",type:"Personal",risk_pct:"1",funding:{}}});
+      if(r&&r.id)id=r.id;
+    }
+    setAccounts(function(ac){return ac.concat([makeAcc(id,newAccName.trim())]);});
+    setNewAccName("");
+    setActiveAccId(id);
+  }
+}
   var stats=getStats(accTrades);
   var equity=getEquity();
   var health=checkHealth();
