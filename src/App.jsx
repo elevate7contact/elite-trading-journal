@@ -214,12 +214,6 @@ if(data.trades&&data.trades.length>0){
     setShowPopup(true);
   }
 }
-      if(pending.length>0){
-    setPendingTrades(pending);
-    setPopupTrade(pending[0]);
-    setShowPopup(true);
-  }
-
       }
       if(data.messages&&data.messages.length>0){
         setChatMsgs(data.messages.map(function(m){return{role:m.role,content:m.content};}));
