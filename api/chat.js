@@ -1,10 +1,61 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+)
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Guardar trade si viene en el body
+    if (req.body.saveTrade) {
+      var trade = req.body.saveTrade
+      await supabase.from('trades').insert(trade)
+      return res.status(200).json({ ok: true })
+    }
+
+    // Guardar cuenta si viene en el body
+    if (req.body.saveAccount) {
+      var account = req.body.saveAccount
+      var result = await supabase.from('accounts').insert(account).select()
+      return res.status(200).json(result.data[0])
+    }
+
+    // Guardar perfil del trader
+    if (req.body.saveTrader) {
+      var trader = req.body.saveTrader
+      await supabase.from('traders').upsert(trader)
+      return res.status(200).json({ ok: true })
+    }
+
+    // Guardar mensaje del chat
+    if (req.body.saveMessage) {
+      var message = req.body.saveMessage
+      await supabase.from('chat_messages').insert(message)
+      return res.status(200).json({ ok: true })
+    }
+
+    // Cargar datos del trader
+    if (req.body.loadData) {
+      var traderId = req.body.loadData
+      var trader = await supabase.from('traders').select('*').eq('id', traderId).single()
+      var accounts = await supabase.from('accounts').select('*').eq('trader_id', traderId)
+      var trades = await supabase.from('trades').select('*').eq('trader_id', traderId)
+      var messages = await supabase.from('chat_messages').select('*').eq('trader_id', traderId).order('created_at')
+      return res.status(200).json({
+        trader: trader.data,
+        accounts: accounts.data,
+        trades: trades.data,
+        messages: messages.data
+      })
+    }
+
+    // Llamada a la IA de Anthropic
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -12,11 +63,12 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify(req.body)
-    });
+    })
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    var data = await response.json()
+    return res.status(200).json(data)
+
   } catch (error) {
-    return res.status(500).json({ error: 'Error connecting to AI' });
+    return res.status(500).json({ error: error.message })
   }
 }
