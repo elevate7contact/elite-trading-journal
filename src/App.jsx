@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { supabase } from './supabase.js';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const G="#C9A84C";
@@ -177,11 +176,11 @@ export default function App({ session }) {
   var naS=useState("");var newAccName=naS[0],setNewAccName=naS[1];
   var loadingDataS=useState(true);var loadingData=loadingDataS[0],setLoadingData=loadingDataS[1];
   var pendingS=useState([]);var pendingTrades=pendingS[0],setPendingTrades=pendingS[1];
-var showPopupS=useState(false);var showPopup=showPopupS[0],setShowPopup=showPopupS[1];
-var popupTradeS=useState(null);var popupTrade=popupTradeS[0],setPopupTrade=popupTradeS[1];
-var popupEmotionS=useState("Calmado");var popupEmotion=popupEmotionS[0],setPopupEmotion=popupEmotionS[1];
-var popupFollowedS=useState(true);var popupFollowed=popupFollowedS[0],setPopupFollowed=popupFollowedS[1];
-var popupNotesS=useState("");var popupNotes=popupNotesS[0],setPopupNotes=popupNotesS[1];
+  var showPopupS=useState(false);var showPopup=showPopupS[0],setShowPopup=showPopupS[1];
+  var popupTradeS=useState(null);var popupTrade=popupTradeS[0],setPopupTrade=popupTradeS[1];
+  var popupEmotionS=useState("Calmado");var popupEmotion=popupEmotionS[0],setPopupEmotion=popupEmotionS[1];
+  var popupFollowedS=useState(true);var popupFollowed=popupFollowedS[0],setPopupFollowed=popupFollowedS[1];
+  var popupNotesS=useState("");var popupNotes=popupNotesS[0],setPopupNotes=popupNotesS[1];
   var chatEndRef=useRef(null);
   var chatInputRef=useRef(null);
 
@@ -204,16 +203,11 @@ var popupNotesS=useState("");var popupNotes=popupNotesS[0],setPopupNotes=popupNo
         setAccounts(data.accounts.map(function(a){return{id:a.id,name:a.name,balance:a.balance,type:a.type,riskPct:a.risk_pct,funding:a.funding||{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}};}));
         setActiveAccId(data.accounts[0].id);
       }
-if(data.trades&&data.trades.length>0){
-  var pending=data.trades.filter(function(t){return t.status==="pending";});
-  var complete=data.trades.filter(function(t){return t.status!=="pending";});
-  setTrades(complete.map(function(t){return{id:t.id,date:t.trade_date,pair:t.pair,dir:t.direction,entry:t.entry,exit_price:t.exit_price,lot_size:t.lot_size,duration:t.duration,sl:t.sl,tp:t.tp,result:t.result,pnl:t.pnl,rr:t.rr,emotion:t.emotion,followed:t.followed,errors:t.errors||[],notes:t.notes,accountId:t.account_id,status:t.status};}));
-  if(pending.length>0){
-    setPendingTrades(pending);
-    setPopupTrade(pending[0]);
-    setShowPopup(true);
-  }
-}
+      if(data.trades&&data.trades.length>0){
+        var pending=data.trades.filter(function(t){return t.status==="pending";});
+        var complete=data.trades.filter(function(t){return t.status!=="pending";});
+        setTrades(complete.map(function(t){return{id:t.id,date:t.trade_date,pair:t.pair,dir:t.direction,entry:t.entry,exit_price:t.exit_price,lot_size:t.lot_size,duration:t.duration,sl:t.sl,tp:t.tp,result:t.result,pnl:t.pnl,rr:t.rr,emotion:t.emotion,followed:t.followed,errors:t.errors||[],notes:t.notes,accountId:t.account_id,status:t.status};}));
+        if(pending.length>0){setPendingTrades(pending);setPopupTrade(pending[0]);setShowPopup(true);}
       }
       if(data.messages&&data.messages.length>0){
         setChatMsgs(data.messages.map(function(m){return{role:m.role,content:m.content};}));
@@ -315,53 +309,57 @@ if(data.trades&&data.trades.length>0){
     setChatLoading(false);
     setTimeout(function(){if(chatInputRef.current)chatInputRef.current.focus();},100);
   }
-async function completePendingTrade(){
-  if(!popupTrade)return;
-  var updated=Object.assign({},popupTrade,{emotion:popupEmotion,followed:popupFollowed,notes:popupNotes,status:"complete"});
-  await apiCall({saveTrade:{id:popupTrade.id,emotion:popupEmotion,followed:popupFollowed,notes:popupNotes,status:"complete",trader_id:userId,account_id:activeAccId,pair:popupTrade.pair,direction:popupTrade.direction,entry:popupTrade.entry,exit_price:popupTrade.exit_price,lot_size:popupTrade.lot_size,duration:popupTrade.duration,sl:"0",tp:"0",result:popupTrade.result,pnl:popupTrade.pnl,rr:"0",trade_date:popupTrade.trade_date}});
-  setTrades(function(prev){return prev.concat([updated]);});
-  var remaining=pendingTrades.filter(function(t){return t.id!==popupTrade.id;});
-  setPendingTrades(remaining);
-  if(remaining.length>0){setPopupTrade(remaining[0]);setPopupEmotion("Calmado");setPopupFollowed(true);setPopupNotes("");}
-  else{setShowPopup(false);setPopupTrade(null);await getAIFeedback(updated);setPhase("post_trade");}
-}
+
+  async function completePendingTrade(){
+    if(!popupTrade)return;
+    var updated=Object.assign({},popupTrade,{emotion:popupEmotion,followed:popupFollowed,notes:popupNotes,status:"complete"});
+    await apiCall({saveTrade:{id:popupTrade.id,emotion:popupEmotion,followed:popupFollowed,notes:popupNotes,status:"complete",trader_id:userId,account_id:activeAccId,pair:popupTrade.pair,direction:popupTrade.direction,entry:popupTrade.entry,exit_price:popupTrade.exit_price,lot_size:popupTrade.lot_size,duration:popupTrade.duration,sl:"0",tp:"0",result:popupTrade.result,pnl:popupTrade.pnl,rr:"0",trade_date:popupTrade.trade_date}});
+    setTrades(function(prev){return prev.concat([updated]);});
+    var remaining=pendingTrades.filter(function(t){return t.id!==popupTrade.id;});
+    setPendingTrades(remaining);
+    if(remaining.length>0){setPopupTrade(remaining[0]);setPopupEmotion("Calmado");setPopupFollowed(true);setPopupNotes("");}
+    else{setShowPopup(false);setPopupTrade(null);await getAIFeedback(updated);setPhase("post_trade");}
+  }
+
   var stats=getStats(accTrades);
   var equity=getEquity();
   var health=checkHealth();
   var posResult=calcPos({market:lc.market,asset:lc.asset,balance:lc.balance,riskPct:lc.riskPct,slMode:lc.slMode,slVal:lc.slVal});
   var wrap={background:DK,minHeight:"100vh",fontFamily:"Georgia,serif",color:TX,maxWidth:820,margin:"0 auto"};
-if(showPopup&&popupTrade) return(
-  <div style={Object.assign({},wrap,{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh"})}>
-    <div style={{width:"100%",maxWidth:500,padding:"1.5rem"}}>
-      <div style={{fontSize:11,letterSpacing:"0.2em",color:G,marginBottom:8,textTransform:"uppercase"}}>Nuevo trade detectado desde MT5</div>
-      <div style={styCardG}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Par</div><div style={{fontSize:16,color:G}}>{popupTrade.pair}</div></div>
-          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Direccion</div><div style={{fontSize:16,color:popupTrade.direction==="Long"?"#6AAF5E":"#C84B4B"}}>{popupTrade.direction}</div></div>
-          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Entrada</div><div style={{fontSize:14,color:TX}}>{popupTrade.entry}</div></div>
-          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Salida</div><div style={{fontSize:14,color:TX}}>{popupTrade.exit_price}</div></div>
-          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Lotaje</div><div style={{fontSize:14,color:TX}}>{popupTrade.lot_size}</div></div>
-          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Duracion</div><div style={{fontSize:14,color:TX}}>{popupTrade.duration}</div></div>
-          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>P&L</div><div style={{fontSize:16,color:parseFloat(popupTrade.pnl)>=0?G:"#C84B4B"}}>${popupTrade.pnl}</div></div>
-          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Resultado</div><div style={{fontSize:16,color:popupTrade.result==="Win"?G:popupTrade.result==="Loss"?"#C84B4B":"#C4862A"}}>{popupTrade.result}</div></div>
+
+  if(showPopup&&popupTrade) return(
+    <div style={Object.assign({},wrap,{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh"})}>
+      <div style={{width:"100%",maxWidth:500,padding:"1.5rem"}}>
+        <div style={{fontSize:11,letterSpacing:"0.2em",color:G,marginBottom:8,textTransform:"uppercase"}}>Nuevo trade detectado desde MT5</div>
+        <div style={styCardG}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+            <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Par</div><div style={{fontSize:16,color:G}}>{popupTrade.pair}</div></div>
+            <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Direccion</div><div style={{fontSize:16,color:popupTrade.direction==="Long"?"#6AAF5E":"#C84B4B"}}>{popupTrade.direction}</div></div>
+            <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Entrada</div><div style={{fontSize:14,color:TX}}>{popupTrade.entry}</div></div>
+            <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Salida</div><div style={{fontSize:14,color:TX}}>{popupTrade.exit_price}</div></div>
+            <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Lotaje</div><div style={{fontSize:14,color:TX}}>{popupTrade.lot_size}</div></div>
+            <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Duracion</div><div style={{fontSize:14,color:TX}}>{popupTrade.duration}</div></div>
+            <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>P&L</div><div style={{fontSize:16,color:parseFloat(popupTrade.pnl)>=0?G:"#C84B4B"}}>${popupTrade.pnl}</div></div>
+            <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Resultado</div><div style={{fontSize:16,color:popupTrade.result==="Win"?G:popupTrade.result==="Loss"?"#C84B4B":"#C4862A"}}>{popupTrade.result}</div></div>
+          </div>
+          <Divider/>
+          <Lbl c="Como te sentiste durante el trade?" />
+          <StableSelect value={popupEmotion} onChange={function(v){setPopupEmotion(v);}} style={{marginBottom:12}}>
+            {EMOTIONS.map(function(em){return <option key={em}>{em}</option>;})}
+          </StableSelect>
+          <Lbl c="Seguiste tu plan de trading?" />
+          <div style={{display:"flex",gap:8,marginBottom:12}}>
+            {[true,false].map(function(v){return <button key={String(v)} onClick={function(){setPopupFollowed(v);}} style={Object.assign({},styBtn,{flex:1,borderColor:popupFollowed===v?G:BD,color:popupFollowed===v?G:TX2,background:popupFollowed===v?"rgba(201,168,76,0.08)":"transparent"})}>{v?"Si":"No"}</button>;})}
+          </div>
+          <Lbl c="Comentario (opcional)" />
+          <StableTextarea style={{height:70}} placeholder="Que observaste en este trade?" value={popupNotes} onChange={function(v){setPopupNotes(v);}}/>
         </div>
-        <Divider/>
-        <Lbl c="Como te sentiste durante el trade?" />
-        <StableSelect value={popupEmotion} onChange={function(v){setPopupEmotion(v);}} style={{marginBottom:12}}>
-          {EMOTIONS.map(function(em){return <option key={em}>{em}</option>;})}
-        </StableSelect>
-        <Lbl c="Seguiste tu plan de trading?" />
-        <div style={{display:"flex",gap:8,marginBottom:12}}>
-          {[true,false].map(function(v){return <button key={String(v)} onClick={function(){setPopupFollowed(v);}} style={Object.assign({},styBtn,{flex:1,borderColor:popupFollowed===v?G:BD,color:popupFollowed===v?G:TX2,background:popupFollowed===v?"rgba(201,168,76,0.08)":"transparent"})}>{v?"Si":"No"}</button>;})}
-        </div>
-        <Lbl c="Comentario (opcional)" />
-        <StableTextarea style={{height:70}} placeholder="Que observaste en este trade?" value={popupNotes} onChange={function(v){setPopupNotes(v);}}/>
+        <button style={Object.assign({},styBtnP,{width:"100%",marginTop:4})} onClick={completePendingTrade}>Guardar y obtener analisis IA</button>
+        {pendingTrades.length>1&&<div style={{textAlign:"center",marginTop:10,fontSize:12,color:TX3}}>{pendingTrades.length-1} trades pendientes mas</div>}
       </div>
-      <button style={Object.assign({},styBtnP,{width:"100%",marginTop:4})} onClick={completePendingTrade}>Guardar y obtener analisis IA</button>
-      {pendingTrades.length>1&&<div style={{textAlign:"center",marginTop:10,fontSize:12,color:TX3}}>{pendingTrades.length-1} trades pendientes mas</div>}
     </div>
-  </div>
-);
+  );
+
   if(loadingData) return(
     <div style={Object.assign({},wrap,{display:"flex",alignItems:"center",justifyContent:"center"})}>
       <div style={{color:G,fontFamily:"Georgia,serif",fontSize:14,letterSpacing:"0.1em"}}>Cargando tu diario...</div>
