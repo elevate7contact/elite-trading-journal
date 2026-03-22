@@ -336,7 +336,38 @@ async function completePendingTrade(){
   var health=checkHealth();
   var posResult=calcPos({market:lc.market,asset:lc.asset,balance:lc.balance,riskPct:lc.riskPct,slMode:lc.slMode,slVal:lc.slVal});
   var wrap={background:DK,minHeight:"100vh",fontFamily:"Georgia,serif",color:TX,maxWidth:820,margin:"0 auto"};
-
+if(showPopup&&popupTrade) return(
+  <div style={Object.assign({},wrap,{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh"})}>
+    <div style={{width:"100%",maxWidth:500,padding:"1.5rem"}}>
+      <div style={{fontSize:11,letterSpacing:"0.2em",color:G,marginBottom:8,textTransform:"uppercase"}}>Nuevo trade detectado desde MT5</div>
+      <div style={styCardG}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Par</div><div style={{fontSize:16,color:G}}>{popupTrade.pair}</div></div>
+          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Direccion</div><div style={{fontSize:16,color:popupTrade.direction==="Long"?"#6AAF5E":"#C84B4B"}}>{popupTrade.direction}</div></div>
+          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Entrada</div><div style={{fontSize:14,color:TX}}>{popupTrade.entry}</div></div>
+          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Salida</div><div style={{fontSize:14,color:TX}}>{popupTrade.exit_price}</div></div>
+          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Lotaje</div><div style={{fontSize:14,color:TX}}>{popupTrade.lot_size}</div></div>
+          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Duracion</div><div style={{fontSize:14,color:TX}}>{popupTrade.duration}</div></div>
+          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>P&L</div><div style={{fontSize:16,color:parseFloat(popupTrade.pnl)>=0?G:"#C84B4B"}}>${popupTrade.pnl}</div></div>
+          <div style={{padding:"10px 12px",background:"#000",borderRadius:8,border:"1px solid "+BD}}><div style={{fontSize:10,color:TX3,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>Resultado</div><div style={{fontSize:16,color:popupTrade.result==="Win"?G:popupTrade.result==="Loss"?"#C84B4B":"#C4862A"}}>{popupTrade.result}</div></div>
+        </div>
+        <Divider/>
+        <Lbl c="Como te sentiste durante el trade?" />
+        <StableSelect value={popupEmotion} onChange={function(v){setPopupEmotion(v);}} style={{marginBottom:12}}>
+          {EMOTIONS.map(function(em){return <option key={em}>{em}</option>;})}
+        </StableSelect>
+        <Lbl c="Seguiste tu plan de trading?" />
+        <div style={{display:"flex",gap:8,marginBottom:12}}>
+          {[true,false].map(function(v){return <button key={String(v)} onClick={function(){setPopupFollowed(v);}} style={Object.assign({},styBtn,{flex:1,borderColor:popupFollowed===v?G:BD,color:popupFollowed===v?G:TX2,background:popupFollowed===v?"rgba(201,168,76,0.08)":"transparent"})}>{v?"Si":"No"}</button>;})}
+        </div>
+        <Lbl c="Comentario (opcional)" />
+        <StableTextarea style={{height:70}} placeholder="Que observaste en este trade?" value={popupNotes} onChange={function(v){setPopupNotes(v);}}/>
+      </div>
+      <button style={Object.assign({},styBtnP,{width:"100%",marginTop:4})} onClick={completePendingTrade}>Guardar y obtener analisis IA</button>
+      {pendingTrades.length>1&&<div style={{textAlign:"center",marginTop:10,fontSize:12,color:TX3}}>{pendingTrades.length-1} trades pendientes mas</div>}
+    </div>
+  </div>
+);
   if(loadingData) return(
     <div style={Object.assign({},wrap,{display:"flex",alignItems:"center",justifyContent:"center"})}>
       <div style={{color:G,fontFamily:"Georgia,serif",fontSize:14,letterSpacing:"0.1em"}}>Cargando tu diario...</div>
