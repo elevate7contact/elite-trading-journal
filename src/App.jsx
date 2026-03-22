@@ -636,7 +636,7 @@ export default function App({session}){
           <div style={styCardG}>
             <div style={{color:G,fontSize:11,textTransform:"uppercase",marginBottom:12}}>Agregar nueva cuenta</div>
             <Lbl c="Nombre de la cuenta" />
-            <StableInput value={newAccName} onChange={function(v){setNewAccName(v);}} placeholder="Ej: FTMO $50K, Cuenta Real..." />
+            <StableInput value={newAccName} onChange={function(v){setNewAccName(v);}} placeholder="Ej: FTMO 50K, Cuenta Real..." />
             <button style={Object.assign({},styBtnP,{marginTop:12})} onClick={async function(){if(newAccName.trim()){var id=Date.now();if(userId){var r=await apiCall({saveAccount:{trader_id:userId,name:newAccName.trim(),balance:"10000",type:"Personal",risk_pct:"1",funding:{}}});if(r&&r.id)id=r.id;}setAccounts(function(ac){return ac.concat([makeAcc(id,newAccName.trim())]);});setNewAccName("");setActiveAccId(id);}}>Crear cuenta</button>
           </div>
         </div>
