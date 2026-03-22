@@ -198,6 +198,24 @@ export default function App({ session }) {
         if(data.trader.plan)setPlan(data.trader.plan);
         if(data.trader.memory)setTraderMem(data.trader.memory);
         if(data.trader.level)setPhase("dashboard");
+        useEffect(function(){
+  if(!userId)return;
+  var interval=setInterval(function(){
+    apiCall({checkPending:userId}).then(function(data){
+      if(data.pending&&data.pending.length>0){
+        var ids=pendingTrades.map(function(t){return t.id;});
+        var newPending=data.pending.filter(function(t){return ids.indexOf(t.id)<0;});
+        if(newPending.length>0){
+          var mapped=newPending.map(function(t){return{id:t.id,date:t.trade_date,pair:t.pair,direction:t.direction,entry:t.entry,exit_price:t.exit_price,lot_size:t.lot_size,duration:t.duration,result:t.result,pnl:t.pnl,status:t.status,trade_date:t.trade_date};});
+          setPendingTrades(function(prev){return prev.concat(mapped);});
+          setPopupTrade(mapped[0]);
+          setShowPopup(true);
+        }
+    
+    });
+  },10000);
+  return function(){clearInterval(interval);};
+},[userId,pendingTrades]);
       }
       if(data.accounts&&data.accounts.length>0){
         setAccounts(data.accounts.map(function(a){return{id:a.id,name:a.name,balance:a.balance,type:a.type,riskPct:a.risk_pct,funding:a.funding||{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}};}));
