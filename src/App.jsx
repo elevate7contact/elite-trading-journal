@@ -176,6 +176,12 @@ export default function App({ session }) {
   var lcS=useState({market:"Forex/CFD",asset:"EUR/USD",balance:"10000",riskPct:"1",slMode:"pips",slVal:"20"});var lc=lcS[0],setLc=lcS[1];
   var naS=useState("");var newAccName=naS[0],setNewAccName=naS[1];
   var loadingDataS=useState(true);var loadingData=loadingDataS[0],setLoadingData=loadingDataS[1];
+  var pendingS=useState([]);var pendingTrades=pendingS[0],setPendingTrades=pendingS[1];
+var showPopupS=useState(false);var showPopup=showPopupS[0],setShowPopup=showPopupS[1];
+var popupTradeS=useState(null);var popupTrade=popupTradeS[0],setPopupTrade=popupTradeS[1];
+var popupEmotionS=useState("Calmado");var popupEmotion=popupEmotionS[0],setPopupEmotion=popupEmotionS[1];
+var popupFollowedS=useState(true);var popupFollowed=popupFollowedS[0],setPopupFollowed=popupFollowedS[1];
+var popupNotesS=useState("");var popupNotes=popupNotesS[0],setPopupNotes=popupNotesS[1];
   var chatEndRef=useRef(null);
   var chatInputRef=useRef(null);
 
