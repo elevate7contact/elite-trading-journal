@@ -310,15 +310,17 @@ export default function App({ session }) {
     setTimeout(function(){if(chatInputRef.current)chatInputRef.current.focus();},100);
   }
 
-  async function completePendingTrade(){
-    if(!popupTrade)return;
-    var updated=Object.assign({},popupTrade,{emotion:popupEmotion,followed:popupFollowed,notes:popupNotes,status:"complete"});
-    await apiCall({saveTrade:{id:popupTrade.id,emotion:popupEmotion,followed:popupFollowed,notes:popupNotes,status:"complete",trader_id:userId,account_id:activeAccId,pair:popupTrade.pair,direction:popupTrade.direction,entry:popupTrade.entry,exit_price:popupTrade.exit_price,lot_size:popupTrade.lot_size,duration:popupTrade.duration,sl:"0",tp:"0",result:popupTrade.result,pnl:popupTrade.pnl,rr:"0",trade_date:popupTrade.trade_date}});
-    setTrades(function(prev){return prev.concat([updated]);});
-    var remaining=pendingTrades.filter(function(t){return t.id!==popupTrade.id;});
-    setPendingTrades(remaining);
-    if(remaining.length>0){setPopupTrade(remaining[0]);setPopupEmotion("Calmado");setPopupFollowed(true);setPopupNotes("");}
-    else{setShowPopup(false);setPopupTrade(null);await getAIFeedback(updated);setPhase("post_trade");}
+ async function completePendingTrade(){
+  if(!popupTrade)return;
+  var updated={id:popupTrade.id,emotion:popupEmotion,followed:popupFollowed,notes:popupNotes,status:"complete"};
+  await apiCall({completeTrade:updated});
+  var completed=Object.assign({},popupTrade,{emotion:popupEmotion,followed:popupFollowed,notes:popupNotes,status:"complete"});
+  setTrades(function(prev){return prev.concat([completed]);});
+  var remaining=pendingTrades.filter(function(t){return t.id!==popupTrade.id;});
+  setPendingTrades(remaining);
+  if(remaining.length>0){setPopupTrade(remaining[0]);setPopupEmotion("Calmado");setPopupFollowed(true);setPopupNotes("");}
+  else{setShowPopup(false);setPopupTrade(null);await getAIFeedback(completed);setPhase("post_trade");}
+
   }
 
   var stats=getStats(accTrades);
