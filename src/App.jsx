@@ -396,17 +396,20 @@ export default function App({session}){
   }
 
   async function crearCuenta(){
-    if(newAccName.trim()){
-      var id=Date.now();
-      if(userId){
-        var r=await apiCall({saveAccount:{trader_id:userId,name:newAccName.trim(),balance:"10000",type:"Personal",risk_pct:"1",funding:{}}});
-        if(r&&r.id)id=r.id;
-      }
-      setAccounts(function(ac){return ac.concat([makeAcc(id,newAccName.trim())]);});
-      setNewAccName("");
-      setActiveAccId(id);
+  if(newAccName.trim()){
+    var id=Date.now();
+    var sizeVal=newAccSize||"10000";
+    var typeVal=newAccType||"Personal";
+    if(userId){
+      var r=await apiCall({saveAccount:{trader_id:userId,name:newAccName.trim(),balance:sizeVal,size:sizeVal,type:typeVal,risk_pct:"1",funding:{}}});
+      if(r&&r.id)id=r.id;
     }
+    var newAcc=Object.assign({},makeAcc(id,newAccName.trim()),{balance:sizeVal,size:sizeVal,type:typeVal});
+    setAccounts(function(ac){return ac.concat([newAcc]);});
+    setNewAccName("");setNewAccSize("10000");setNewAccType("Personal");
+    setActiveAccId(id);
   }
+}
 
   var stats=getStats(accTrades);
   var equity=getEquity();
