@@ -2,15 +2,73 @@ import React, { useState, useRef, useEffect } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from './supabase.js';
 
-const G="#C9A84C",G2="#E8C97A",DK="#0A0A0F",S2="#16161F",S3="#1C1C28";
-const BD="rgba(201,168,76,0.18)",BD2="rgba(201,168,76,0.35)";
-const TX="#F0EDE8",TX2="#9E9A93",TX3="#5A5750";
+const G="#D4A843",G2="#F0C866",DK="#070709",S2="#0E0E14",S3="#141420";
+const BD="rgba(212,168,67,0.18)",BD2="rgba(212,168,67,0.32)";
+const TX="#F2EDE4",TX2="#8A8680",TX3="#3D3C40";
 
-const styInp={width:"100%",boxSizing:"border-box",background:"#000",border:"1px solid "+BD2,color:"#fff",borderRadius:8,padding:"9px 12px",fontSize:13,fontFamily:"Georgia,serif",outline:"none"};
-const styBtn={cursor:"pointer",padding:"8px 18px",borderRadius:8,border:"1px solid "+BD2,background:"transparent",color:G,fontSize:12,fontFamily:"Georgia,serif",letterSpacing:"0.04em"};
-const styBtnP={cursor:"pointer",padding:"10px 24px",borderRadius:8,border:"1px solid "+G,background:"rgba(201,168,76,0.08)",color:G,fontSize:13,fontFamily:"Georgia,serif",letterSpacing:"0.06em"};
-const styCard={background:S2,border:"1px solid "+BD,borderRadius:12,padding:"1.25rem 1.5rem",marginBottom:14};
-const styCardG={background:"linear-gradient(135deg,#16161F,#1A1810)",border:"1px solid "+BD2,borderRadius:12,padding:"1.25rem 1.5rem",marginBottom:14};
+// ── PSICOTRADING QUOTES ──────────────────────────────────────────────────────
+const PSICO_QUOTES=[
+  {text:"El mercado no te debe nada. Tu edge sí.",author:"Diario del trader"},
+  {text:"Disciplina no es lo que sientes. Es lo que haces cuando no quieres.",author:"Psicotrader"},
+  {text:"Cada pérdida bien gestionada es una inversión en tu mentalidad.",author:"Trading Psychology"},
+  {text:"El trader que controla sus emociones controla su cuenta.",author:"Elevate Zeven"},
+  {text:"No hay estrategia perfecta. Hay ejecución consistente.",author:"Psicotrader"},
+  {text:"El miedo te paraliza. El plan te libera.",author:"Diario del trader"},
+  {text:"Un mal trade bien gestionado vale más que un buen trade mal ejecutado.",author:"Trading Psychology"},
+  {text:"Tu PnL es el resultado de tus decisiones. Tus decisiones son el resultado de tu mente.",author:"Psicotrader"},
+  {text:"El mercado paga a los pacientes y cobra caro a los impulsivos.",author:"Elevate Zeven"},
+  {text:"Sé el trader que quisieras tener enfrente.",author:"Diario del trader"},
+  {text:"Operar con miedo es apostar. Operar con plan es hacer negocios.",author:"Psicotrader"},
+  {text:"El drawdown no rompe cuentas. El revenge trading sí.",author:"Trading Psychology"},
+];
+
+// ── QUOTE ROTATOR COMPONENT ──────────────────────────────────────────────────
+function QuoteRotator(){
+  var idxS=useState(function(){return Math.floor(Math.random()*PSICO_QUOTES.length);});
+  var qIdx=idxS[0],setQIdx=idxS[1];
+  var visS=useState(true);var visible=visS[0],setVisible=visS[1];
+  var hvS=useState(false);var hovered=hvS[0],setHovered=hvS[1];
+  useEffect(function(){
+    if(hovered)return;
+    var iv=setInterval(function(){
+      setVisible(false);
+      setTimeout(function(){setQIdx(function(i){return(i+1)%PSICO_QUOTES.length;});setVisible(true);},480);
+    },6000);
+    return function(){clearInterval(iv);};
+  },[hovered]);
+  var q=PSICO_QUOTES[qIdx];
+  return React.createElement("div",{
+    onMouseEnter:function(){setHovered(true);},
+    onMouseLeave:function(){setHovered(false);},
+    style:{background:"linear-gradient(135deg,"+S2+" 0%,rgba(212,168,67,0.04) 100%)",border:"1px solid "+BD,borderLeft:"3px solid "+G,borderRadius:16,padding:"18px 22px",position:"relative",overflow:"hidden",marginBottom:16}
+  },
+    React.createElement("div",{style:{position:"absolute",top:6,right:16,fontSize:60,color:"rgba(212,168,67,0.07)",fontFamily:"Georgia,serif",lineHeight:1,pointerEvents:"none",userSelect:"none"}},'"'),
+    React.createElement("div",{style:{opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(6px)",transition:"all 0.48s ease"}},
+      React.createElement("p",{style:{fontSize:15,color:TX,lineHeight:1.75,fontFamily:"Georgia,serif",fontStyle:"italic",marginBottom:10,paddingRight:36}},q.text),
+      React.createElement("p",{style:{fontSize:11,color:G,letterSpacing:"0.12em",textTransform:"uppercase"}},"— "+q.author)
+    ),
+    React.createElement("div",{style:{display:"flex",gap:5,marginTop:14}},
+      PSICO_QUOTES.map(function(_,i){
+        return React.createElement("div",{key:i,onClick:function(){setQIdx(i);setVisible(true);},style:{width:i===qIdx?20:5,height:3,borderRadius:2,background:i===qIdx?G:TX3,transition:"all 0.4s",cursor:"pointer"}});
+      })
+    )
+  );
+}
+
+const styInp={width:"100%",boxSizing:"border-box",background:"rgba(0,0,0,0.5)",border:"1px solid "+BD2,color:TX,borderRadius:10,padding:"10px 14px",fontSize:13,fontFamily:"'DM Sans',system-ui,sans-serif",outline:"none",transition:"border-color 0.2s"};
+const styBtn={cursor:"pointer",padding:"8px 18px",borderRadius:10,border:"1px solid "+BD2,background:"transparent",color:G,fontSize:12,fontFamily:"'DM Sans',system-ui,sans-serif",letterSpacing:"0.04em",transition:"all 0.2s"};
+const styBtnP={cursor:"pointer",padding:"10px 26px",borderRadius:10,border:"1px solid "+G,background:"rgba(212,168,67,0.1)",color:G,fontSize:13,fontFamily:"'DM Sans',system-ui,sans-serif",letterSpacing:"0.04em",transition:"all 0.2s",boxShadow:"0 0 18px rgba(212,168,67,0.12)"};
+const styCard={background:S2,border:"1px solid "+BD,borderRadius:14,padding:"1.25rem 1.5rem",marginBottom:14};
+const styCardG={background:"linear-gradient(135deg,"+S2+",rgba(212,168,67,0.04))",border:"1px solid "+BD2,borderRadius:14,padding:"1.25rem 1.5rem",marginBottom:14};
+const GLOBAL_CSS=`
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap');
+  *{box-sizing:border-box;}
+  input,textarea,select{font-family:'DM Sans',system-ui,sans-serif!important;}
+  input:focus,textarea:focus,select:focus{border-color:${G}!important;box-shadow:0 0 0 2px rgba(212,168,67,0.15)!important;}
+  ::-webkit-scrollbar{width:4px;height:4px;}
+  ::-webkit-scrollbar-thumb{background:${BD2};border-radius:2px;}
+  button:hover{opacity:0.88;}
+`;
 
 function StableInput(props){
   var value=props.value,onChange=props.onChange,style=props.style;
@@ -32,9 +90,9 @@ function StableSelect(props){
   var value=props.value,onChange=props.onChange,children=props.children,style=props.style;
   return React.createElement("select",{value:value,style:Object.assign({},styInp,style||{}),onChange:function(e){onChange(e.target.value);}},children);
 }
-function Lbl(props){return React.createElement("label",{style:{fontSize:11,color:TX3,display:"block",marginBottom:5,letterSpacing:"0.08em",textTransform:"uppercase"}},props.c);}
-function Divider(){return React.createElement("div",{style:{height:1,background:"linear-gradient(to right,transparent,"+BD2+",transparent)",margin:"14px 0"}});}
-function SecLabel(props){return React.createElement("div",{style:{fontSize:11,letterSpacing:"0.2em",color:G,marginBottom:16,textTransform:"uppercase"}},props.c);}
+function Lbl(props){return React.createElement("label",{style:{fontSize:11,color:TX2,display:"block",marginBottom:6,letterSpacing:"0.1em",textTransform:"uppercase",fontFamily:"'DM Sans',system-ui,sans-serif"}},props.c);}
+function Divider(){return React.createElement("div",{style:{height:1,background:"linear-gradient(to right,transparent,"+BD2+",transparent)",margin:"16px 0"}});}
+function SecLabel(props){return React.createElement("div",{style:{fontSize:11,letterSpacing:"0.2em",color:G,marginBottom:18,textTransform:"uppercase",fontFamily:"'DM Sans',system-ui,sans-serif",fontWeight:600}},props.c);}
 
 const FUTURES={"MES (Micro E-mini S&P)":{dpp:5,tick:0.25,tv:1.25,note:"1/10 de ES"},"ES (E-mini S&P)":{dpp:50,tick:0.25,tv:12.5,note:"Full e-mini"},"MNQ (Micro E-mini Nasdaq)":{dpp:2,tick:0.25,tv:0.50,note:"1/10 de NQ"},"NQ (E-mini Nasdaq)":{dpp:20,tick:0.25,tv:5,note:"Full e-mini"},"MYM (Micro E-mini Dow)":{dpp:0.5,tick:1,tv:0.50,note:"1/10 de YM"},"YM (E-mini Dow)":{dpp:5,tick:1,tv:5,note:"Full e-mini"},"MGC (Micro Gold)":{dpp:10,tick:0.1,tv:1,note:"10 oz"},"GC (Gold Full)":{dpp:100,tick:0.1,tv:10,note:"100 oz"}};
 const FOREX={"EUR/USD":{pv:10},"GBP/USD":{pv:10},"AUD/USD":{pv:10},"USD/CHF":{pv:10},"USD/CAD":{pv:7.7},"USD/JPY":{pv:9.1},"GBP/JPY":{pv:9.1},"EUR/JPY":{pv:9.1},"XAU/USD":{pv:1},"US30/CFD":{pv:1},"NAS100/CFD":{pv:1},"SP500/CFD":{pv:1}};
@@ -311,7 +369,7 @@ export default function App({session}){
   var equity=getEquity();
   var health=checkHealth();
   var posResult=calcPos({market:lc.market,asset:lc.asset,balance:lc.balance,riskPct:lc.riskPct,slMode:lc.slMode,slVal:lc.slVal});
-  var wrap={background:DK,minHeight:"100vh",fontFamily:"Georgia,serif",color:TX,maxWidth:820,margin:"0 auto"};
+  var wrap={background:DK,minHeight:"100vh",fontFamily:"'DM Sans',system-ui,sans-serif",color:TX,maxWidth:900,margin:"0 auto",position:"relative"};
   var pendingCount=pendingTrades.filter(function(t){return t.accountId===activeAccId||!t.accountId;}).length;
 
   const NAV_ITEMS=[
@@ -326,7 +384,7 @@ export default function App({session}){
     {id:"accounts",label:"Cuentas"}
   ];
 
-  if(loadingData)return(<div style={Object.assign({},wrap,{display:"flex",alignItems:"center",justifyContent:"center"})}><div style={{color:G,fontFamily:"Georgia,serif",fontSize:14,letterSpacing:"0.1em"}}>Cargando tu diario...</div></div>);
+  if(loadingData)return(<div style={Object.assign({},wrap,{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh"})}><style>{GLOBAL_CSS}</style><div style={{textAlign:"center"}}><div style={{fontSize:28,marginBottom:12}}>◈</div><div style={{color:G,fontSize:13,letterSpacing:"0.15em",textTransform:"uppercase"}}>Cargando tu diario...</div></div></div>);
 
   if(phase==="onboarding")return(
     <div style={Object.assign({},wrap,{display:"flex",alignItems:"center",justifyContent:"center"})}>
@@ -400,56 +458,87 @@ export default function App({session}){
 
   return(
     <div style={wrap}>
-      <div style={{background:"#111118",borderBottom:"1px solid "+BD}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 16px 6px"}}>
-          <div><span style={{fontSize:11,color:G,letterSpacing:"0.15em",textTransform:"uppercase"}}>Elite Trading Journal</span><span style={{fontSize:13,color:TX,marginLeft:12}}>{traderName}</span><span style={{fontSize:11,color:TX3,marginLeft:8}}>- {traderLevel}</span></div>
+      <style>{GLOBAL_CSS}</style>
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,backgroundImage:"linear-gradient(rgba(212,168,67,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(212,168,67,0.025) 1px,transparent 1px)",backgroundSize:"52px 52px"}} />
+      <div style={{position:"fixed",top:-200,right:-150,width:500,height:500,background:"radial-gradient(circle,rgba(212,168,67,0.05) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}} />
+      <div style={{position:"sticky",top:0,zIndex:50,background:"rgba(7,7,9,0.9)",backdropFilter:"blur(20px)",borderBottom:"1px solid "+BD}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 20px 6px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{width:30,height:30,borderRadius:8,background:"linear-gradient(135deg,"+G+" 0%,"+G2+" 100%)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,color:DK,fontWeight:800}}>◈</div>
+            <div>
+              <div style={{fontSize:12,fontWeight:700,color:TX,letterSpacing:"0.06em"}}>ELITE TRADING</div>
+              <div style={{fontSize:10,color:G,letterSpacing:"0.18em"}}>JOURNAL PRO</div>
+            </div>
+          </div>
           <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
-            {accounts.map(function(a){return <button key={a.id} onClick={function(){setActiveAccId(a.id);}} style={{padding:"4px 10px",borderRadius:12,border:"1px solid "+(activeAccId===a.id?G:BD),background:activeAccId===a.id?"rgba(201,168,76,0.12)":"transparent",color:activeAccId===a.id?G:TX3,fontSize:10,cursor:"pointer",fontFamily:"Georgia,serif"}}>{a.name}</button>;})}
-            <button onClick={async function(){await supabase.auth.signOut();}} style={{padding:"4px 10px",borderRadius:12,border:"1px solid #C84B4B44",background:"transparent",color:"#C84B4B",fontSize:10,cursor:"pointer",fontFamily:"Georgia,serif"}}>Salir</button>
+            {accounts.map(function(a){return <button key={a.id} onClick={function(){setActiveAccId(a.id);}} style={{padding:"4px 12px",borderRadius:20,border:"1px solid "+(activeAccId===a.id?G:BD),background:activeAccId===a.id?"rgba(212,168,67,0.12)":"transparent",color:activeAccId===a.id?G:TX2,fontSize:11,cursor:"pointer"}}>{a.name}</button>;})}
+            <div style={{padding:"4px 12px",borderRadius:20,background:S3,border:"1px solid rgba(255,255,255,0.06)",fontSize:11,color:TX2}}>{traderName} · {traderLevel}</div>
+            <button onClick={async function(){await supabase.auth.signOut();}} style={{padding:"4px 12px",borderRadius:20,border:"1px solid rgba(200,75,75,0.3)",background:"rgba(200,75,75,0.08)",color:"#F87171",fontSize:11,cursor:"pointer"}}>Salir</button>
           </div>
         </div>
-        <div style={{display:"flex",gap:2,flexWrap:"wrap",padding:"0 12px"}}>
+        <div style={{display:"flex",gap:2,flexWrap:"wrap",padding:"0 16px",overflowX:"auto"}}>
           {NAV_ITEMS.map(function(n){
             var isPending=n.id==="history"&&pendingCount>0;
-            return <button key={n.id} style={{padding:"6px 11px",borderRadius:"8px 8px 0 0",border:"1px solid "+(phase===n.id?BD2:"transparent"),borderBottom:"none",background:phase===n.id?S2:"transparent",color:phase===n.id?G:isPending?G:TX3,cursor:"pointer",fontSize:11,fontFamily:"Georgia,serif",fontWeight:isPending?"500":"400"}} onClick={function(){setPhase(n.id);}}>{n.label}{isPending&&<span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:G,marginLeft:5,verticalAlign:"middle"}} />}</button>;
+            return <button key={n.id} style={{padding:"7px 13px",borderRadius:"10px 10px 0 0",border:"1px solid "+(phase===n.id?BD2:"transparent"),borderBottom:"none",background:phase===n.id?S2:"transparent",color:phase===n.id?G:isPending?G:TX2,cursor:"pointer",fontSize:11,whiteSpace:"nowrap",transition:"all 0.2s",fontWeight:isPending?"600":"400"}} onClick={function(){setPhase(n.id);}}>{n.label}{isPending&&<span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:G,marginLeft:5,verticalAlign:"middle",boxShadow:"0 0 6px "+G}} />}</button>;
           })}
         </div>
       </div>
 
-      <div style={{padding:"1.5rem"}}>
+      <div style={{padding:"1.5rem",position:"relative",zIndex:1}}>
 
       {phase==="dashboard"&&(
         <div>
-          <SecLabel c={"Panel principal — "+activeAcc.name} />
-          {pendingCount>0&&<div style={{...styCard,borderLeft:"2px solid "+G,padding:"12px 16px",marginBottom:14,cursor:"pointer"}} onClick={function(){setPhase("history");}}>
+          <QuoteRotator />
+          {pendingCount>0&&<div style={{...styCard,borderLeft:"3px solid "+G,padding:"12px 18px",marginBottom:14,cursor:"pointer",background:"rgba(212,168,67,0.05)"}} onClick={function(){setPhase("history");}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-              <div><span style={{color:G,fontSize:13,fontWeight:500}}>{pendingCount} trade{pendingCount>1?"s":""} pendiente{pendingCount>1?"s":""} de completar</span><div style={{fontSize:11,color:TX3,marginTop:2}}>Ir al historial para llenar los datos</div></div>
-              <span style={{color:G,fontSize:18}}>›</span>
+              <div><span style={{color:G,fontSize:13,fontWeight:600}}>{pendingCount} trade{pendingCount>1?"s":""} pendiente{pendingCount>1?"s":""} de completar</span><div style={{fontSize:11,color:TX2,marginTop:3}}>Ir al historial para llenar los datos post-trade</div></div>
+              <span style={{color:G,fontSize:20}}>›</span>
             </div>
           </div>}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:10,marginBottom:14}}>
-            {[{v:stats.wr+"%",l:"Win rate"},{v:"$"+stats.totalPnl,l:"P&L total",c:stats.totalPnl>=0?G:"#C84B4B"},{v:stats.total,l:"Trades"},{v:stats.avgRR+"R",l:"RR promedio"}].map(function(m,i){return <div key={i} style={{background:S3,border:"1px solid "+BD,borderRadius:10,padding:"1rem",textAlign:"center"}}><div style={{fontSize:22,color:m.c||G}}>{m.v}</div><div style={{fontSize:10,color:TX3,marginTop:5,letterSpacing:"0.08em",textTransform:"uppercase"}}>{m.l}</div></div>;})}</div>
-          {stats.streak>1&&<div style={Object.assign({},styCard,{borderLeft:"2px solid "+(stats.sType==="Win"?G:"#C84B4B"),padding:"10px 16px",marginBottom:14})}><span style={{fontSize:12,color:TX2}}>Racha actual: </span><span style={{color:stats.sType==="Win"?G:"#C84B4B"}}>{stats.streak} {stats.sType==="Win"?"wins consecutivos":"losses consecutivos"}</span>{stats.sType==="Loss"&&stats.streak>=2&&<span style={{fontSize:11,color:"#C84B4B",marginLeft:12}}>- Considera pausar el dia</span>}</div>}
-          {health&&<div style={styCard}><div style={{fontSize:11,color:G,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.1em"}}>Salud fondeo — {activeAcc.funding.company}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>{[{l:"DD diario",u:health.du,lim:health.dl,p:health.dp},{l:"DD total",u:health.tl,lim:health.tlt,p:health.tp}].map(function(h){return <div key={h.l}><div style={{fontSize:11,color:TX2,marginBottom:6}}>{h.l}: ${h.u} / ${h.lim}</div><div style={{height:6,background:S3,borderRadius:3}}><div style={{height:6,borderRadius:3,background:h.p>80?"#C84B4B":h.p>50?"#C4862A":G,width:Math.min(100,h.p)+"%",transition:"width .4s"}}/></div><div style={{fontSize:10,color:TX3,marginTop:3}}>{h.p}%{h.p>80?" — PELIGRO":""}</div></div>;})}</div></div>}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginBottom:16}}>
+            {[
+              {v:stats.wr+"%",l:"Win rate",icon:"🎯",c:G},
+              {v:(stats.totalPnl>=0?"+ $":"− $")+Math.abs(stats.totalPnl),l:"P&L total",c:stats.totalPnl>=0?"#4ADE80":"#F87171"},
+              {v:stats.total,l:"Trades",icon:"📊",c:"#A78BFA"},
+              {v:stats.avgRR+"R",l:"RR promedio",icon:"⚡",c:"#60A5FA"}
+            ].map(function(m,i){
+              return <div key={i} style={{background:S2,border:"1px solid "+BD,borderRadius:14,padding:"16px 18px",position:"relative",overflow:"hidden",transition:"transform 0.2s"}}
+                onMouseEnter={function(e){e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=m.c+"55";}}
+                onMouseLeave={function(e){e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.borderColor=BD;}}>
+                <div style={{position:"absolute",top:0,right:0,width:"50%",height:"100%",background:"radial-gradient(ellipse at top right,"+m.c+"15 0%,transparent 70%)",pointerEvents:"none"}} />
+                {m.icon&&<div style={{fontSize:18,marginBottom:6}}>{m.icon}</div>}
+                <div style={{fontSize:24,color:m.c,fontFamily:"monospace",fontWeight:700,letterSpacing:"-0.02em"}}>{m.v}</div>
+                <div style={{fontSize:10,color:TX2,marginTop:5,letterSpacing:"0.1em",textTransform:"uppercase"}}>{m.l}</div>
+              </div>;
+            })}
+          </div>
+          {stats.streak>1&&<div style={{...styCard,borderLeft:"3px solid "+(stats.sType==="Win"?"#4ADE80":"#F87171"),padding:"12px 18px",marginBottom:14,background:stats.sType==="Win"?"rgba(74,222,128,0.04)":"rgba(248,113,113,0.04)"}}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:stats.sType==="Win"?"#4ADE80":"#F87171",boxShadow:"0 0 8px "+(stats.sType==="Win"?"#4ADE80":"#F87171")}} />
+              <span style={{fontSize:13,color:TX2}}>Racha actual: <span style={{color:stats.sType==="Win"?"#4ADE80":"#F87171",fontWeight:600}}>{stats.streak} {stats.sType==="Win"?"wins consecutivos":"losses consecutivos"}</span></span>
+              {stats.sType==="Loss"&&stats.streak>=2&&<span style={{fontSize:11,color:"#F87171",marginLeft:4}}>· Considera pausar el día</span>}
+            </div>
+          </div>}
+          {health&&<div style={styCard}><div style={{fontSize:11,color:G,marginBottom:14,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:600}}>Salud fondeo — {activeAcc.funding.company}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>{[{l:"DD diario",u:health.du,lim:health.dl,p:health.dp},{l:"DD total",u:health.tl,lim:health.tlt,p:health.tp}].map(function(h){var hc=h.p>80?"#F87171":h.p>50?"#FB923C":"#4ADE80";return <div key={h.l}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:12,color:TX2}}>{h.l}</span><span style={{fontSize:12,color:hc,fontFamily:"monospace"}}>${h.u} / ${h.lim}</span></div><div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:hc,width:Math.min(100,h.p)+"%",transition:"width .6s",boxShadow:"0 0 6px "+hc+"66"}}/></div><div style={{fontSize:10,color:TX3,marginTop:3}}>{h.p}%{h.p>80?" — PELIGRO ⚠":""}</div></div>;})}</div></div>}
           <div style={styCard}>
-            <div style={{fontSize:11,color:G,marginBottom:14,textTransform:"uppercase",letterSpacing:"0.1em"}}>Curva de equity</div>
-            <ResponsiveContainer width="100%" height={180}>
+            <div style={{fontSize:11,color:G,marginBottom:14,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:600}}>Curva de equity</div>
+            <ResponsiveContainer width="100%" height={190}>
               <AreaChart data={[{name:"Inicio",balance:parseFloat(activeAcc.balance)||10000}].concat(equity)}>
-                <defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={G} stopOpacity={0.2}/><stop offset="95%" stopColor={G} stopOpacity={0}/></linearGradient></defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={BD}/><XAxis dataKey="name" tick={{fontSize:10,fill:TX3}}/><YAxis tick={{fontSize:10,fill:TX3}} domain={["auto","auto"]}/>
-                <Tooltip formatter={function(v){return "$"+v;}} contentStyle={{background:S2,border:"1px solid "+BD,borderRadius:8,fontSize:11,color:TX}}/>
-                <Area type="monotone" dataKey="balance" stroke={G} fill="url(#gg)" strokeWidth={1.5}/>
+                <defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={G} stopOpacity={0.25}/><stop offset="95%" stopColor={G} stopOpacity={0}/></linearGradient></defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={BD} vertical={false}/><XAxis dataKey="name" tick={{fontSize:10,fill:TX2}} axisLine={false} tickLine={false}/><YAxis tick={{fontSize:10,fill:TX2}} domain={["auto","auto"]} axisLine={false} tickLine={false}/>
+                <Tooltip formatter={function(v){return "$"+v;}} contentStyle={{background:S3,border:"1px solid "+BD,borderRadius:10,fontSize:11,color:TX}}/>
+                <Area type="monotone" dataKey="balance" stroke={G} fill="url(#gg)" strokeWidth={2} dot={{fill:G,r:3,strokeWidth:0}}/>
               </AreaChart>
             </ResponsiveContainer>
           </div>
           <div style={styCard}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div style={{fontSize:11,color:G,textTransform:"uppercase",letterSpacing:"0.1em"}}>Resumen semanal — IA</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <div style={{fontSize:11,color:G,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:600}}>Análisis semanal — Mentor IA</div>
               <button style={styBtn} onClick={getWeeklyAI}>{weeklyLoading?"Analizando...":"Analizar semana"}</button>
             </div>
-            {weeklyAI?<div style={{fontSize:13,color:TX2,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{weeklyAI}</div>:<div style={{fontSize:12,color:TX3}}>Haz clic para obtener tu resumen inteligente.</div>}
+            {weeklyAI?<div style={{fontSize:14,color:TX2,lineHeight:1.9,whiteSpace:"pre-wrap"}}>{weeklyAI}</div>:<div style={{fontSize:13,color:TX3,fontStyle:"italic"}}>Haz clic para obtener tu resumen inteligente de la semana.</div>}
           </div>
-          <button style={styBtnP} onClick={function(){setPhase("pre_trade");}}>Iniciar sesion de trading</button>
+          <button style={Object.assign({},styBtnP,{width:"100%",textAlign:"center",padding:"13px"})} onClick={function(){setPhase("pre_trade");}}>Iniciar sesión de trading</button>
         </div>
       )}
 
@@ -508,8 +597,8 @@ export default function App({session}){
       {phase==="post_trade"&&(
         <div>
           <SecLabel c="Analisis post-trade" />
-          {aiLoading&&<div style={Object.assign({},styCardG,{textAlign:"center",padding:"2.5rem"})}><div style={{color:TX2,fontSize:13,letterSpacing:"0.1em"}}>Tu mentor esta analizando la operacion...</div></div>}
-          {aiFeedback&&!aiLoading&&<div style={Object.assign({},styCardG,{borderLeft:"2px solid "+G})}><div style={{fontSize:11,color:G,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.1em"}}>Analisis de tu mentor</div><div style={{fontSize:13,color:TX2,lineHeight:1.9,whiteSpace:"pre-wrap"}}>{aiFeedback}</div></div>}
+          {aiLoading&&<div style={Object.assign({},styCardG,{textAlign:"center",padding:"2.5rem"})}><div style={{color:TX2,fontSize:13,letterSpacing:"0.12em"}}>Tu mentor está analizando la operación...</div></div>}
+          {aiFeedback&&!aiLoading&&<div style={Object.assign({},styCardG,{borderLeft:"3px solid "+G})}><div style={{fontSize:11,color:G,marginBottom:14,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:600}}>Análisis de tu mentor</div><div style={{fontSize:14,color:TX2,lineHeight:1.9,whiteSpace:"pre-wrap",fontFamily:"Georgia,serif",fontStyle:"italic"}}>{aiFeedback}</div></div>}
           <div style={{display:"flex",gap:10,marginTop:14,flexWrap:"wrap"}}>
             <button style={styBtnP} onClick={function(){setCurTrade({pair:"",dir:"Long",entry:"",sl:"",tp:"",result:"",pnl:"",emotion:"Calmado",followed:true,errors:[],notes:""});setPhase("during_trade");}}>Registrar otra operacion</button>
             <button style={styBtn} onClick={function(){setPhase("dashboard");}}>Ver panel</button>
@@ -662,20 +751,22 @@ export default function App({session}){
       {phase==="chat"&&(
         <div>
           <SecLabel c="Mentor IA" />
-          <div style={{fontSize:11,color:TX3,marginBottom:16}}>Tu coach personal — psicologo del rendimiento — siempre disponible para {traderName}</div>
+          <div style={{fontSize:13,color:TX2,marginBottom:16,lineHeight:1.7}}>Tu coach personal de trading y psicología del rendimiento — siempre disponible para <span style={{color:G}}>{traderName}</span></div>
           <div style={Object.assign({},styCard,{padding:0,overflow:"hidden"})}>
-            <div style={{height:400,overflowY:"auto",padding:"1.25rem",display:"flex",flexDirection:"column",gap:12}}>
-              {chatMsgs.map(function(m,i){return(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}><div style={{maxWidth:"80%",padding:"10px 14px",borderRadius:m.role==="user"?"12px 12px 2px 12px":"12px 12px 12px 2px",background:m.role==="user"?"rgba(201,168,76,0.12)":S3,border:"1px solid "+(m.role==="user"?BD2:BD),fontSize:13,color:m.role==="user"?TX:TX2,lineHeight:1.8,whiteSpace:"pre-wrap",fontFamily:m.role==="assistant"?"Georgia,serif":"system-ui,sans-serif"}}>{m.content}</div></div>);})}
-              {chatLoading&&<div style={{display:"flex",justifyContent:"flex-start"}}><div style={{padding:"10px 14px",borderRadius:"12px 12px 12px 2px",background:S3,border:"1px solid "+BD,fontSize:13,color:TX3,fontStyle:"italic"}}>Escribiendo...</div></div>}
+            <div style={{height:420,overflowY:"auto",padding:"1.25rem",display:"flex",flexDirection:"column",gap:12}}>
+              {chatMsgs.map(function(m,i){return(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}><div style={{maxWidth:"82%",padding:"11px 16px",borderRadius:m.role==="user"?"14px 14px 3px 14px":"14px 14px 14px 3px",background:m.role==="user"?"rgba(212,168,67,0.12)":S3,border:"1px solid "+(m.role==="user"?BD2:BD),fontSize:13,color:m.role==="user"?TX:TX2,lineHeight:1.85,whiteSpace:"pre-wrap",fontFamily:m.role==="assistant"?"Georgia,serif":"inherit"}}>{m.content}</div></div>);})}
+              {chatLoading&&<div style={{display:"flex",justifyContent:"flex-start"}}><div style={{padding:"11px 16px",borderRadius:"14px 14px 14px 3px",background:S3,border:"1px solid "+BD,fontSize:13,color:TX3,fontStyle:"italic",display:"flex",alignItems:"center",gap:8}}><span style={{display:"inline-block",width:6,height:6,borderRadius:"50%",background:G,animation:"pulse 1s infinite"}} />Escribiendo...</div></div>}
               <div ref={chatEndRef} />
             </div>
             <div style={{borderTop:"1px solid "+BD,padding:"12px 16px",display:"flex",gap:10,background:S2}}>
               <input ref={chatInputRef} value={chatInput} onChange={function(e){setChatInput(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}}} placeholder="Escribele a tu mentor..." style={Object.assign({},styInp,{flex:1,margin:0})} disabled={chatLoading} />
-              <button onClick={sendChat} disabled={chatLoading||!chatInput.trim()} style={Object.assign({},styBtnP,{padding:"8px 20px",opacity:chatLoading||!chatInput.trim()?0.4:1})}>Enviar</button>
+              <button onClick={sendChat} disabled={chatLoading||!chatInput.trim()} style={Object.assign({},styBtnP,{padding:"9px 22px",opacity:chatLoading||!chatInput.trim()?0.4:1})}>Enviar</button>
             </div>
           </div>
-          <div style={{marginTop:10,display:"flex",flexWrap:"wrap",gap:6}}>
-            {["Como mejorar mi disciplina?","Me siento frustrado hoy","Que errores debo corregir?","Necesito motivacion"].map(function(txt){return <button key={txt} onClick={function(){setChatInput(txt);}} style={{padding:"5px 12px",borderRadius:20,border:"1px solid "+BD,background:"transparent",color:TX3,fontSize:11,cursor:"pointer",fontFamily:"system-ui,sans-serif"}}>{txt}</button>;})}
+          <div style={{marginTop:12,display:"flex",flexWrap:"wrap",gap:6}}>
+            {["Como mejorar mi disciplina?","Me siento frustrado hoy","Que errores debo corregir?","Necesito motivacion"].map(function(txt){return <button key={txt} onClick={function(){setChatInput(txt);}} style={{padding:"6px 14px",borderRadius:20,border:"1px solid "+BD,background:"transparent",color:TX2,fontSize:11,cursor:"pointer",transition:"all 0.2s"}}
+              onMouseEnter={function(e){e.currentTarget.style.borderColor=G;e.currentTarget.style.color=G;}}
+              onMouseLeave={function(e){e.currentTarget.style.borderColor=BD;e.currentTarget.style.color=TX2;}}>{txt}</button>;})}
           </div>
         </div>
       )}
