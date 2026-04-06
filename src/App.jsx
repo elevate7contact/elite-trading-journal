@@ -172,7 +172,6 @@ const ERRORS=["Movi el stop","Cerre antes del TP","Revenge trade","Oversize","No
 const LEVEL_DESC={Novato:"Fundamentos del mercado",Intermedio:"Analisis tecnico, buscas consistencia",Avanzado:"Sistema propio, buscas escalar"};
 const EXP_OPTS=["Menos de 1 ano","Mas de 1 ano","Mas de 3 anos"];
 
-const ACCOUNT_SIZES=["5,000","10,000","25,000","50,000","100,000","200,000"];
 function makeAcc(id,name){return{id:id,name:name,balance:"10000",size:"10000",type:"Personal",riskPct:"1",funding:{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}};}
 async function apiCall(body){var r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});return r.json();}
 
