@@ -172,7 +172,8 @@ const ERRORS=["Movi el stop","Cerre antes del TP","Revenge trade","Oversize","No
 const LEVEL_DESC={Novato:"Fundamentos del mercado",Intermedio:"Analisis tecnico, buscas consistencia",Avanzado:"Sistema propio, buscas escalar"};
 const EXP_OPTS=["Menos de 1 ano","Mas de 1 ano","Mas de 3 anos"];
 
-function makeAcc(id,name){return{id:id,name:name,balance:"10000",size:"10000",type:"Personal",riskPct:"1",funding:{...}}}
+const ACCOUNT_SIZES=["5,000","10,000","25,000","50,000","100,000","200,000"];
+function makeAcc(id,name){return{id:id,name:name,balance:"10000",size:"10000",type:"Personal",riskPct:"1",funding:{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}};}
 async function apiCall(body){var r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});return r.json();}
 
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
@@ -232,7 +233,7 @@ export default function App({session}){
         if(data.trader.level)setPhase("dashboard");
       }
       if(data.accounts&&data.accounts.length>0){
-        setAccounts(data.accounts.map(function(a){return{id:a.id,name:a.name,balance:a.balance,size:a.size||a.balance,type:a.type,riskPct:a.risk_pct,funding:a.funding||{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}};}));
+        setAccounts(data.accounts.map(function(a){return{id:a.id,name:a.name,balance:a.balance,type:a.type,riskPct:a.risk_pct,funding:a.funding||{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}};}));
         setActiveAccId(data.accounts[0].id);
       }
       if(data.trades&&data.trades.length>0){
@@ -529,9 +530,7 @@ export default function App({session}){
       <SecLabel c="Configuracion de cuenta inicial" />
       <div style={styCard}>
         <Lbl c="Como llamar a esta cuenta?" /><StableInput value={activeAcc.name} onChange={function(v){updAcc("name",v);}} style={{marginBottom:12}} placeholder="Ej: Cuenta Principal..." />
-        <Lbl c="Tamano de la cuenta (USD)" />
-        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>{ACCOUNT_SIZES.map(function(s){var num=s.replace(",","");var isActive=(activeAcc.size||activeAcc.balance)===num;return <button key={s} onClick={function(){updAcc("size",num);updAcc("balance",num);}} style={Object.assign({},styBtn,{padding:"5px 12px",fontSize:11,borderColor:isActive?G:BD,color:isActive?G:TX2,background:isActive?"rgba(212,168,67,0.08)":"transparent"})}>${s}</button>;})}</div>
-        <StableInput type="number" value={activeAcc.size||activeAcc.balance} onChange={function(v){updAcc("size",v);updAcc("balance",v);}} style={{marginBottom:12}} placeholder="O escribe el monto exacto..." />
+        <Lbl c="Saldo inicial (USD)" /><StableInput type="number" value={activeAcc.balance} onChange={function(v){updAcc("balance",v);}} style={{marginBottom:12}} />
         <Lbl c="Tipo de cuenta" /><StableSelect value={activeAcc.type} onChange={function(v){updAcc("type",v);}} style={{marginBottom:12}}><option>Personal</option><option>Empresa de fondeo</option></StableSelect>
         <Lbl c="Riesgo por operacion (%)" /><StableInput type="number" step="0.5" min="0.1" max="10" value={activeAcc.riskPct} onChange={function(v){updAcc("riskPct",v);}} />
         <div style={{marginTop:12,padding:"12px 16px",background:"rgba(0,0,0,0.3)",borderRadius:10,fontSize:13,color:TX2,border:"1px solid "+BD}}>Riesgo por trade: <span style={{color:G,fontWeight:700,fontSize:16}}>${Math.round((parseFloat(activeAcc.balance)||0)*(parseFloat(activeAcc.riskPct)||0)/100)}</span></div>
