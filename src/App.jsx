@@ -933,26 +933,16 @@ export default function App({session}){
             {accounts.map(function(a){return(<div key={a.id} style={Object.assign({},styCard,{borderLeft:"3px solid "+(activeAccId===a.id?G:BD)})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><span style={{color:activeAccId===a.id?G:TX,fontSize:14,fontWeight:activeAccId===a.id?600:400}}>{a.name}</span><div style={{display:"flex",gap:8}}>{activeAccId!==a.id&&<button style={Object.assign({},styBtn,{padding:"4px 12px",fontSize:11})} onClick={function(){setActiveAccId(a.id);}}>Activar</button>}{accounts.length>1&&<button style={Object.assign({},styBtn,{padding:"4px 12px",fontSize:11,borderColor:RED,color:RED})} onClick={function(){setAccounts(function(ac){return ac.filter(function(x){return x.id!==a.id;});});}}>Eliminar</button>}</div></div><div style={{fontSize:12,color:TX2}}>Saldo: <span style={{color:G,fontWeight:600}}>${a.balance}</span> — Riesgo: {a.riskPct}% — {a.type}</div></div>);})}
             <div style={styCardG}>
               <div style={Object.assign({},styCardG,{marginBottom:16})}>
-                <div style={{color:G,fontSize:11,textTransform:"uppercase",marginBottom:16,fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Agregar nueva cuenta</div>
-<Lbl c="Nombre de la cuenta" />
-<StableInput value={newAccName} onChange={function(v){setNewAccName(v);}} placeholder="Ej: FTMO 50K, Cuenta Real..." style={{marginBottom:14}} />
-<Lbl c="Tamaño de la cuenta (USD)" />
-<div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
-  {ACCOUNT_SIZES.map(function(s){
-    var num=s.replace(",","");
-    var isActive=newAccSize===num;
-    return <button key={s} onClick={function(){setNewAccSize(num);}} style={Object.assign({},styBtn,{padding:"5px 12px",fontSize:11,borderColor:isActive?G:BD,color:isActive?G:TX2,background:isActive?"rgba(212,168,67,0.08)":"transparent"})}>${s}</button>;
-  })}
-</div>
-<StableInput type="number" value={newAccSize} onChange={function(v){setNewAccSize(v);}} placeholder="O escribe el monto exacto..." style={{marginBottom:14}} />
-<Lbl c="Tipo de cuenta" />
-<StableSelect value={newAccType} onChange={function(v){setNewAccType(v);}} style={{marginBottom:16}}>
-  <option>Personal</option><option>Empresa de fondeo</option>
-</StableSelect>
-{newAccSize&&<div style={{padding:"10px 14px",background:"rgba(0,0,0,0.3)",borderRadius:10,fontSize:12,color:TX2,border:"1px solid "+BD,marginBottom:14}}>
-  Con riesgo del 1% → <span style={{color:G,fontWeight:700}}>${Math.round((parseFloat(newAccSize)||0)*0.01)}</span> por trade
-</div>}
-<button style={styBtnP} onClick={function(){crearCuenta();}}>Crear cuenta</button>
+                <div style={{color:G,fontSize:11,textTransform:"uppercase",marginBottom:12,fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Agregar nueva cuenta</div>
+              <Lbl c="Nombre de la cuenta" />
+              <StableInput value={newAccName} onChange={function(v){setNewAccName(v);}} placeholder="Ej: FTMO 50K, Cuenta Real..." style={{marginBottom:14}} />
+              <Lbl c="Tamano de la cuenta (USD)" />
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>{ACCOUNT_SIZES.map(function(s){var num=s.replace(",","");var isActive=newAccSize===num;return <button key={s} onClick={function(){setNewAccSize(num);}} style={Object.assign({},styBtn,{padding:"5px 12px",fontSize:11,borderColor:isActive?G:BD,color:isActive?G:TX2,background:isActive?"rgba(212,168,67,0.08)":"transparent"})}>${s}</button>;})}</div>
+              <StableInput type="number" value={newAccSize} onChange={function(v){setNewAccSize(v);}} placeholder="O escribe el monto exacto..." style={{marginBottom:14}} />
+              <Lbl c="Tipo de cuenta" />
+              <StableSelect value={newAccType} onChange={function(v){setNewAccType(v);}} style={{marginBottom:14}}><option>Personal</option><option>Empresa de fondeo</option></StableSelect>
+              {newAccSize&&<div style={{padding:"10px 14px",background:"rgba(0,0,0,0.3)",borderRadius:10,fontSize:12,color:TX2,border:"1px solid "+BD,marginBottom:14}}>Con riesgo del 1%: <span style={{color:G,fontWeight:700}}>${Math.round((parseFloat(newAccSize)||0)*0.01)}</span> por trade</div>}
+              <button style={styBtnP} onClick={function(){crearCuenta();}}>Crear cuenta</button>
           </div>
         )}
 
