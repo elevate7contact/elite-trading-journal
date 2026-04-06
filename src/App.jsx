@@ -211,6 +211,8 @@ export default function App({session}){
   var memS=useState({});var traderMem=memS[0],setTraderMem=memS[1];
   var lcS=useState({market:"Forex/CFD",asset:"EUR/USD",balance:"10000",riskPct:"1",slMode:"pips",slVal:"20"});var lc=lcS[0],setLc=lcS[1];
   var naS=useState("");var newAccName=naS[0],setNewAccName=naS[1];
+  var naSizeS=useState("10000");var newAccSize=naSizeS[0],setNewAccSize=naSizeS[1];
+  var naTypeS=useState("Personal");var newAccType=naTypeS[0],setNewAccType=naTypeS[1];
   var ldS=useState(true);var loadingData=ldS[0],setLoadingData=ldS[1];
   var chatEndRef=useRef(null);
   var chatInputRef=useRef(null);
@@ -230,7 +232,7 @@ export default function App({session}){
         if(data.trader.level)setPhase("dashboard");
       }
       if(data.accounts&&data.accounts.length>0){
-        setAccounts(data.accounts.map(function(a){return{id:a.id,name:a.name,balance:a.balance,type:a.type,riskPct:a.risk_pct,funding:a.funding||{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}};}));
+        setAccounts(data.accounts.map(function(a){return{id:a.id,name:a.name,balance:a.balance,size:a.size||a.balance,type:a.type,riskPct:a.risk_pct,funding:a.funding||{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}};}));
         setActiveAccId(data.accounts[0].id);
       }
       if(data.trades&&data.trades.length>0){
@@ -308,14 +310,18 @@ export default function App({session}){
     return{pnl:pnl,trades:todayTrades.length,wins:wins,losses:losses};
   }
 
+  function isNA(val){if(!val||val.toString().trim()==="")return true;var s=val.toString().trim().toLowerCase();return s==="n/a"||s==="na"||s==="-";}
   function checkHealth(){
-    var f=activeAcc.funding;if(!f.maxDailyDD||!f.maxTotalDD)return null;
+    var f=activeAcc.funding;
+    if(isNA(f.maxDailyDD)&&isNA(f.maxTotalDD))return null;
     var today=new Date().toISOString().split("T")[0];
     var todayPnl=accTrades.filter(function(t){return t.date===today;}).reduce(function(s,t){return s+(parseFloat(t.pnl)||0);},0);
     var totalPnl=accTrades.reduce(function(s,t){return s+(parseFloat(t.pnl)||0);},0);
     var du=Math.abs(Math.min(0,todayPnl)),tl=Math.abs(Math.min(0,totalPnl));
-    var dl=parseFloat(f.maxDailyDD)||1,tlt=parseFloat(f.maxTotalDD)||1;
-    return{du:Math.round(du),dl:dl,dp:Math.round(du/dl*100),tl:Math.round(tl),tlt:tlt,tp:Math.round(tl/tlt*100)};
+    var dailyNA=isNA(f.maxDailyDD),totalNA=isNA(f.maxTotalDD);
+    var dl=dailyNA?null:parseFloat(f.maxDailyDD)||null;
+    var tlt2=totalNA?null:parseFloat(f.maxTotalDD)||null;
+    return{du:Math.round(du),dl:dl,dp:dl&&dl>0?Math.round(du/dl*100):0,dailyNA:dailyNA,tl:Math.round(tl),tlt:tlt2,tp:tlt2&&tlt2>0?Math.round(tl/tlt2*100):0,totalNA:totalNA};
   }
 
   async function saveTraderProfile(lvl,exp,prof,pl,mem){
@@ -523,12 +529,14 @@ export default function App({session}){
       <SecLabel c="Configuracion de cuenta inicial" />
       <div style={styCard}>
         <Lbl c="Como llamar a esta cuenta?" /><StableInput value={activeAcc.name} onChange={function(v){updAcc("name",v);}} style={{marginBottom:12}} placeholder="Ej: Cuenta Principal..." />
-        <Lbl c="Saldo inicial (USD)" /><StableInput type="number" value={activeAcc.balance} onChange={function(v){updAcc("balance",v);}} style={{marginBottom:12}} />
+        <Lbl c="Tamano de la cuenta (USD)" />
+        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>{ACCOUNT_SIZES.map(function(s){var num=s.replace(",","");var isActive=(activeAcc.size||activeAcc.balance)===num;return <button key={s} onClick={function(){updAcc("size",num);updAcc("balance",num);}} style={Object.assign({},styBtn,{padding:"5px 12px",fontSize:11,borderColor:isActive?G:BD,color:isActive?G:TX2,background:isActive?"rgba(212,168,67,0.08)":"transparent"})}>${s}</button>;})}</div>
+        <StableInput type="number" value={activeAcc.size||activeAcc.balance} onChange={function(v){updAcc("size",v);updAcc("balance",v);}} style={{marginBottom:12}} placeholder="O escribe el monto exacto..." />
         <Lbl c="Tipo de cuenta" /><StableSelect value={activeAcc.type} onChange={function(v){updAcc("type",v);}} style={{marginBottom:12}}><option>Personal</option><option>Empresa de fondeo</option></StableSelect>
         <Lbl c="Riesgo por operacion (%)" /><StableInput type="number" step="0.5" min="0.1" max="10" value={activeAcc.riskPct} onChange={function(v){updAcc("riskPct",v);}} />
         <div style={{marginTop:12,padding:"12px 16px",background:"rgba(0,0,0,0.3)",borderRadius:10,fontSize:13,color:TX2,border:"1px solid "+BD}}>Riesgo por trade: <span style={{color:G,fontWeight:700,fontSize:16}}>${Math.round((parseFloat(activeAcc.balance)||0)*(parseFloat(activeAcc.riskPct)||0)/100)}</span></div>
       </div>
-      {activeAcc.type==="Empresa de fondeo"&&(<div style={styCard}><div style={{color:G,fontSize:11,textTransform:"uppercase",marginBottom:14,fontWeight:700}}>Reglas de fondeo</div><Lbl c="Empresa" /><StableInput placeholder="FTMO, The5ers..." value={activeAcc.funding.company} onChange={function(v){updFund("company",v);}} style={{marginBottom:12}} /><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><div><Lbl c="Max DD diario ($)" /><StableInput type="number" value={activeAcc.funding.maxDailyDD} onChange={function(v){updFund("maxDailyDD",v);}} /></div><div><Lbl c="Max DD total ($)" /><StableInput type="number" value={activeAcc.funding.maxTotalDD} onChange={function(v){updFund("maxTotalDD",v);}} /></div><div style={{marginTop:10}}><Lbl c="Profit target ($)" /><StableInput type="number" value={activeAcc.funding.profitTarget} onChange={function(v){updFund("profitTarget",v);}} /></div><div style={{marginTop:10}}><Lbl c="Dias minimos" /><StableInput type="number" value={activeAcc.funding.minDays} onChange={function(v){updFund("minDays",v);}} /></div></div><div style={{marginTop:12}}><Lbl c="Reglas adicionales" /><StableTextarea style={{height:70}} value={activeAcc.funding.extraRules} onChange={function(v){updFund("extraRules",v);}} placeholder="No operar NFP, max 5 trades/dia..." /></div></div>)}
+      {activeAcc.type==="Empresa de fondeo"&&(<div style={styCard}><div style={{color:G,fontSize:11,textTransform:"uppercase",marginBottom:14,fontWeight:700}}>Reglas de fondeo</div><Lbl c="Empresa" /><StableInput placeholder="FTMO, The5ers..." value={activeAcc.funding.company} onChange={function(v){updFund("company",v);}} style={{marginBottom:12}} /><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><div><Lbl c="Max DD diario ($)" /><StableInput placeholder="Ej: 500 o N/A" value={activeAcc.funding.maxDailyDD} onChange={function(v){updFund("maxDailyDD",v);}} /><div style={{fontSize:10,color:TX3,marginTop:3}}>Escribe N/A si no aplica</div></div><div><Lbl c="Max DD total ($)" /><StableInput placeholder="Ej: 1000 o N/A" value={activeAcc.funding.maxTotalDD} onChange={function(v){updFund("maxTotalDD",v);}} /><div style={{fontSize:10,color:TX3,marginTop:3}}>Escribe N/A si no aplica</div></div><div style={{marginTop:10}}><Lbl c="Profit target ($)" /><StableInput type="number" value={activeAcc.funding.profitTarget} onChange={function(v){updFund("profitTarget",v);}} /></div><div style={{marginTop:10}}><Lbl c="Dias minimos" /><StableInput type="number" value={activeAcc.funding.minDays} onChange={function(v){updFund("minDays",v);}} /></div></div><div style={{marginTop:12}}><Lbl c="Reglas adicionales" /><StableTextarea style={{height:70}} value={activeAcc.funding.extraRules} onChange={function(v){updFund("extraRules",v);}} placeholder="No operar NFP, max 5 trades/dia..." /></div></div>)}
       <button style={styBtnP} onClick={async function(){if(userId){var r=await apiCall({saveAccount:{trader_id:userId,name:activeAcc.name,balance:activeAcc.balance,type:activeAcc.type,risk_pct:activeAcc.riskPct,funding:activeAcc.funding}});if(r&&r.id)setActiveAccId(r.id);}setPhase("dashboard");}}>Entrar al diario →</button>
     </div>
   );
@@ -703,12 +711,12 @@ export default function App({session}){
                 </div>}
                 {health&&<div style={Object.assign({},styCard,{flex:1,marginBottom:0})}>
                   <div style={{fontSize:10,color:G,textTransform:"uppercase",letterSpacing:"0.15em",fontFamily:"'Syne',sans-serif",fontWeight:700,marginBottom:14}}>Salud Fondeo — {activeAcc.funding.company}</div>
-                  {[{l:"DD Diario",u:health.du,lim:health.dl,p:health.dp},{l:"DD Total",u:health.tl,lim:health.tlt,p:health.tp}].map(function(h){
-                    var hc=h.p>80?RED:h.p>50?ORANGE:GREEN;
+                  {[{l:"DD Diario",u:health.du,lim:health.dl,p:health.dp,na:health.dailyNA},{l:"DD Total",u:health.tl,lim:health.tlt,p:health.tp,na:health.totalNA}].map(function(h){
+                    var hc=h.na?"#60A5FA":h.p>80?RED:h.p>50?ORANGE:GREEN;
                     return <div key={h.l} style={{marginBottom:12}}>
-                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:12,color:TX2}}>{h.l}</span><span style={{fontSize:12,color:hc,fontFamily:"monospace"}}>${h.u} / ${h.lim}</span></div>
-                      <div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:hc,width:Math.min(100,h.p)+"%",transition:"width .6s",boxShadow:"0 0 6px "+hc+"66"}}/></div>
-                      <div style={{fontSize:10,color:TX3,marginTop:3}}>{h.p}% utilizado{h.p>80?" — PELIGRO ⚠":""}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:12,color:TX2}}>{h.l}</span><span style={{fontSize:12,color:hc,fontFamily:"monospace"}}>{h.na?"Sin limite":"$"+h.u+" / $"+h.lim}</span></div>
+                      {h.na?<div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:"linear-gradient(to right,#60A5FA33,#60A5FA11)",width:"100%"}}/></div>:<div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:hc,width:Math.min(100,h.p)+"%",transition:"width .6s",boxShadow:"0 0 6px "+hc+"66"}}/></div>}
+                      <div style={{fontSize:10,color:TX3,marginTop:3}}>{h.na?"Sin restriccion de DD":h.p+"% utilizado"+(h.p>80?" — PELIGRO ⚠":"")}</div>
                     </div>;
                   })}
                   {activeAcc.funding.profitTarget&&<div style={{padding:"8px 12px",borderRadius:8,background:"rgba(74,222,128,0.08)",border:"1px solid rgba(74,222,128,0.15)",fontSize:11,color:GREEN}}>✓ Profit target: ${Math.max(0,stats.totalPnl)} / ${activeAcc.funding.profitTarget} ({Math.round(Math.max(0,stats.totalPnl)/parseFloat(activeAcc.funding.profitTarget)*100)}%)</div>}
@@ -908,14 +916,14 @@ export default function App({session}){
             <div style={styCard}>
               <Lbl c="Empresa" /><StableInput style={{marginBottom:12}} placeholder="FTMO, The5ers..." value={activeAcc.funding.company} onChange={function(v){updFund("company",v);}} />
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                <div><Lbl c="Max DD diario ($)" /><StableInput type="number" value={activeAcc.funding.maxDailyDD} onChange={function(v){updFund("maxDailyDD",v);}} /></div>
-                <div><Lbl c="Max DD total ($)" /><StableInput type="number" value={activeAcc.funding.maxTotalDD} onChange={function(v){updFund("maxTotalDD",v);}} /></div>
+                <div><Lbl c="Max DD diario ($)" /><StableInput placeholder="Ej: 500 o N/A" value={activeAcc.funding.maxDailyDD} onChange={function(v){updFund("maxDailyDD",v);}} /><div style={{fontSize:10,color:TX3,marginTop:3}}>Escribe N/A si no aplica</div></div>
+                <div><Lbl c="Max DD total ($)" /><StableInput placeholder="Ej: 1000 o N/A" value={activeAcc.funding.maxTotalDD} onChange={function(v){updFund("maxTotalDD",v);}} /><div style={{fontSize:10,color:TX3,marginTop:3}}>Escribe N/A si no aplica</div></div>
                 <div style={{marginTop:10}}><Lbl c="Profit target ($)" /><StableInput type="number" value={activeAcc.funding.profitTarget} onChange={function(v){updFund("profitTarget",v);}} /></div>
                 <div style={{marginTop:10}}><Lbl c="Dias minimos" /><StableInput type="number" value={activeAcc.funding.minDays} onChange={function(v){updFund("minDays",v);}} /></div>
               </div>
               <div style={{marginTop:12}}><Lbl c="Reglas adicionales" /><StableTextarea style={{height:80}} value={activeAcc.funding.extraRules} onChange={function(v){updFund("extraRules",v);}} placeholder="No operar NFP, max 5 trades/dia..." /></div>
             </div>
-            {health&&<div style={styCard}><div style={{fontSize:11,color:G,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.1em",fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Estado actual</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>{[{l:"DD diario",u:health.du,lim:health.dl,p:health.dp},{l:"DD total",u:health.tl,lim:health.tlt,p:health.tp}].map(function(h){var hc=h.p>80?RED:h.p>50?ORANGE:GREEN;return <div key={h.l}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:12,color:TX2}}>{h.l}</span><span style={{fontSize:12,color:hc,fontFamily:"monospace"}}>${h.u} / ${h.lim}</span></div><div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:hc,width:Math.min(100,h.p)+"%",transition:"width .6s",boxShadow:"0 0 6px "+hc+"66"}}/></div><div style={{fontSize:10,color:TX3,marginTop:3}}>{h.p}%{h.p>80?" — PELIGRO ⚠":""}</div></div>;})}</div>{activeAcc.funding.profitTarget&&<div style={{marginTop:12,fontSize:13,color:TX2}}>Hacia el objetivo: <span style={{color:G,fontWeight:600}}>${Math.max(0,stats.totalPnl)} / ${activeAcc.funding.profitTarget} ({Math.round(Math.max(0,stats.totalPnl)/parseFloat(activeAcc.funding.profitTarget)*100)}%)</span></div>}</div>}
+            {health&&<div style={styCard}><div style={{fontSize:11,color:G,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.1em",fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Estado actual</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>{[{l:"DD diario",u:health.du,lim:health.dl,p:health.dp,na:health.dailyNA},{l:"DD total",u:health.tl,lim:health.tlt,p:health.tp,na:health.totalNA}].map(function(h){var hc=h.na?"#60A5FA":h.p>80?RED:h.p>50?ORANGE:GREEN;return <div key={h.l}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:12,color:TX2}}>{h.l}</span><span style={{fontSize:12,color:hc,fontFamily:"monospace"}}>{h.na?"Sin limite":"$"+h.u+" / $"+h.lim}</span></div>{h.na?<div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:"linear-gradient(to right,#60A5FA33,#60A5FA11)",width:"100%"}}/></div>:<div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:hc,width:Math.min(100,h.p)+"%",transition:"width .6s",boxShadow:"0 0 6px "+hc+"66"}}/></div>}<div style={{fontSize:10,color:TX3,marginTop:3}}>{h.na?"Sin restriccion":h.p+"%"+(h.p>80?" — PELIGRO ⚠":"")}</div></div>;})}</div>{activeAcc.funding.profitTarget&&<div style={{marginTop:12,fontSize:13,color:TX2}}>Hacia el objetivo: <span style={{color:G,fontWeight:600}}>${Math.max(0,stats.totalPnl)} / ${activeAcc.funding.profitTarget} ({Math.round(Math.max(0,stats.totalPnl)/parseFloat(activeAcc.funding.profitTarget)*100)}%)</span></div>}</div>}
             <button style={styBtnP} onClick={async function(){if(userId){await apiCall({saveAccount:{trader_id:userId,name:activeAcc.name,balance:activeAcc.balance,type:activeAcc.type,risk_pct:activeAcc.riskPct,funding:activeAcc.funding}});}setPhase("dashboard");}}>Guardar</button>
           </div>
         )}
