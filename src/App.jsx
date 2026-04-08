@@ -87,7 +87,6 @@ function StableInput(props){
   useEffect(function(){if(ref.current!==document.activeElement)setLv(value!=null?value:"");},[value]);
   return React.createElement("input",Object.assign({},rest,{ref:ref,value:lv,style:Object.assign({},styInp,style||{}),onChange:function(e){setLv(e.target.value);onChange(e.target.value);}}));
 }
-
 function StableTextarea(props){
   var value=props.value,onChange=props.onChange,style=props.style;
   var rest=Object.assign({},props);delete rest.value;delete rest.onChange;delete rest.style;
@@ -96,20 +95,27 @@ function StableTextarea(props){
   useEffect(function(){if(ref.current!==document.activeElement)setLv(value!=null?value:"");},[value]);
   return React.createElement("textarea",Object.assign({},rest,{ref:ref,value:lv,style:Object.assign({},styInp,{resize:"vertical"},style||{}),onChange:function(e){setLv(e.target.value);onChange(e.target.value);}}));
 }
-
 function StableSelect(props){
   var value=props.value,onChange=props.onChange,children=props.children,style=props.style;
   return React.createElement("select",{value:value,style:Object.assign({},styInp,style||{}),onChange:function(e){onChange(e.target.value);}},children);
 }
-
 function Lbl(props){return React.createElement("label",{style:{fontSize:11,color:TX2,display:"block",marginBottom:6,letterSpacing:"0.1em",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}},props.c);}
 function Divider(){return React.createElement("div",{style:{height:1,background:"linear-gradient(to right,transparent,"+BD2+",transparent)",margin:"16px 0"}});}
 function SecLabel(props){return React.createElement("div",{style:{fontSize:11,letterSpacing:"0.2em",color:G,marginBottom:18,textTransform:"uppercase",fontFamily:"'Syne','DM Sans',sans-serif",fontWeight:700}},props.c);}
+
+// ── TICKER BOTTOM ─────────────────────────────────────────────────────────────
+const TICKER_ITEMS=[
+  {label:"EUR/USD",v:"1.0847",up:true},{label:"XAU/USD",v:"2,318.40",up:false},
+  {label:"NAS100",v:"17,842",up:true},{label:"US30",v:"38,429",up:true},
+  {label:"BTC/USD",v:"68,204",up:false},{label:"GBP/USD",v:"1.2661",up:true},
+  {label:"ETH/USD",v:"3,481",up:true},{label:"USD/JPY",v:"151.24",up:false},
+];
 
 // ── DATA CONSTANTS ────────────────────────────────────────────────────────────
 const FUTURES={"MES (Micro E-mini S&P)":{dpp:5,tick:0.25,tv:1.25,note:"1/10 de ES"},"ES (E-mini S&P)":{dpp:50,tick:0.25,tv:12.5,note:"Full e-mini"},"MNQ (Micro E-mini Nasdaq)":{dpp:2,tick:0.25,tv:0.50,note:"1/10 de NQ"},"NQ (E-mini Nasdaq)":{dpp:20,tick:0.25,tv:5,note:"Full e-mini"},"MYM (Micro E-mini Dow)":{dpp:0.5,tick:1,tv:0.50,note:"1/10 de YM"},"YM (E-mini Dow)":{dpp:5,tick:1,tv:5,note:"Full e-mini"},"MGC (Micro Gold)":{dpp:10,tick:0.1,tv:1,note:"10 oz"},"GC (Gold Full)":{dpp:100,tick:0.1,tv:10,note:"100 oz"}};
 const FOREX={"EUR/USD":{pv:10},"GBP/USD":{pv:10},"AUD/USD":{pv:10},"USD/CHF":{pv:10},"USD/CAD":{pv:7.7},"USD/JPY":{pv:9.1},"GBP/JPY":{pv:9.1},"EUR/JPY":{pv:9.1},"XAU/USD":{pv:1},"US30/CFD":{pv:1},"NAS100/CFD":{pv:1},"SP500/CFD":{pv:1}};
 const CRYPTO_LIST=["BTC/USD","ETH/USD","SOL/USD","BNB/USD"];
+const ACCOUNT_SIZES=["2,500","5,000","10,000","25,000","50,000","100,000","200,000"];
 
 function calcPos(opts){
   var market=opts.market,asset=opts.asset,balance=opts.balance,riskPct=opts.riskPct,slMode=opts.slMode,slVal=opts.slVal;
@@ -133,7 +139,7 @@ const PSY=[
 
 function scorePsych(a){
   var rv=0,ov=0,fo=0,gr=0,fe=0,ad=0;
-  if(a.q1==="0")rv+=3;if(a.q2==="2")ov+=2;if(a.q2==="3")ov+=3;if(a.q3==="2")fe+=2;if(a.q3==="3")fe+=3;if(a.q4==="2")ad+=2;if(a.q4==="3")ad+=3;if(a.q5==="2")gr+=2;if(a.q5==="3")gr+=3;if(a.q6==="2")ad+=2;if(a.q6==="3")ad+=3;if(a.q7==="3")fe+=2;if(a.q8==="2")fo+=2;if(a.q8==="3")fo+=3;
+  if(a.q1==="1")rv+=3;if(a.q2==="2")ov+=2;if(a.q2==="3")ov+=3;if(a.q3==="2")fe+=2;if(a.q3==="3")fe+=3;if(a.q4==="2")ad+=2;if(a.q4==="3")ad+=3;if(a.q5==="2")gr+=2;if(a.q5==="3")gr+=3;if(a.q6==="2")ad+=2;if(a.q6==="3")ad+=3;if(a.q7==="3")fe+=2;if(a.q8==="2")fo+=2;if(a.q8==="3")fo+=3;
   var p=[];
   if(rv>=2)p.push({name:"Revenge Trading",level:rv>=3?"Alto":"Medio",color:"#C84B4B",desc:"Sobreoperas tras perdidas para recuperar."});
   if(ov>=2)p.push({name:"Overtrading",level:ov>=3?"Alto":"Medio",color:"#C4862A",desc:"Operas mas de lo planeado. Cada trade extra reduce tu edge."});
@@ -166,21 +172,8 @@ const ERRORS=["Movi el stop","Cerre antes del TP","Revenge trade","Oversize","No
 const LEVEL_DESC={Novato:"Fundamentos del mercado",Intermedio:"Analisis tecnico, buscas consistencia",Avanzado:"Sistema propio, buscas escalar"};
 const EXP_OPTS=["Menos de 1 ano","Mas de 1 ano","Mas de 3 anos"];
 
-function makeAcc(id,name){
-  return {
-    id:id,
-    name:name,
-    balance:"10000",
-    type:"Personal",
-    riskPct:"1",
-    funding:{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}
-  };
-}
-
-async function apiCall(body){
-  var r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  return r.json();
-}
+function makeAcc(id,name){return{id:id,name:name,balance:"10000",size:"10000",type:"Personal",riskPct:"1",funding:{company:"",maxDailyDD:"",maxTotalDD:"",profitTarget:"",minDays:"",extraRules:""}};}
+async function apiCall(body){var r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});return r.json();}
 
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 export default function App({session}){
@@ -196,15 +189,8 @@ export default function App({session}){
   var accS=useState([makeAcc(1,"Cuenta Principal")]);var accounts=accS[0],setAccounts=accS[1];
   var actS=useState(1);var activeAccId=actS[0],setActiveAccId=actS[1];
   var activeAcc=accounts.find(function(a){return a.id===activeAccId;})||accounts[0];
-  
-  function updAcc(f,v){
-    setAccounts(function(ac){return ac.map(function(a){return a.id===activeAccId?Object.assign({},a,{[f]:v}):a;});});
-  }
-  
-  function updFund(f,v){
-    setAccounts(function(ac){return ac.map(function(a){return a.id===activeAccId?Object.assign({},a,{funding:Object.assign({},a.funding,{[f]:v})}):a;});});
-  }
-  
+  function updAcc(f,v){setAccounts(function(ac){return ac.map(function(a){return a.id===activeAccId?Object.assign({},a,{[f]:v}):a;});});}
+  function updFund(f,v){setAccounts(function(ac){return ac.map(function(a){return a.id===activeAccId?Object.assign({},a,{funding:Object.assign({},a.funding,{[f]:v})}):a;});});}
   var tradesS=useState([]);var trades=tradesS[0],setTrades=tradesS[1];
   var pendingS=useState([]);var pendingTrades=pendingS[0],setPendingTrades=pendingS[1];
   var expandedS=useState(null);var expandedId=expandedS[0],setExpandedId=expandedS[1];
@@ -225,6 +211,8 @@ export default function App({session}){
   var memS=useState({});var traderMem=memS[0],setTraderMem=memS[1];
   var lcS=useState({market:"Forex/CFD",asset:"EUR/USD",balance:"10000",riskPct:"1",slMode:"pips",slVal:"20"});var lc=lcS[0],setLc=lcS[1];
   var naS=useState("");var newAccName=naS[0],setNewAccName=naS[1];
+  var naSizeS=useState("10000");var newAccSize=naSizeS[0],setNewAccSize=naSizeS[1];
+  var naTypeS=useState("Personal");var newAccType=naTypeS[0],setNewAccType=naTypeS[1];
   var ldS=useState(true);var loadingData=ldS[0],setLoadingData=ldS[1];
   var chatEndRef=useRef(null);
   var chatInputRef=useRef(null);
@@ -297,6 +285,7 @@ export default function App({session}){
 
   function getEquity(){var b=parseFloat(activeAcc.balance)||10000;return accTrades.map(function(t,i){b+=parseFloat(t.pnl)||0;return{name:"T"+(i+1),balance:Math.round(b)};});}
 
+  // PnL agrupado por día de la semana
   function getWeeklyPnl(){
     var days=["L","M","X","J","V","S","D"];
     var today=new Date();
@@ -311,6 +300,7 @@ export default function App({session}){
     return result;
   }
 
+  // PnL de hoy
   function getTodayPnl(){
     var today=new Date().toISOString().split("T")[0];
     var todayTrades=accTrades.filter(function(t){return t.date===today;});
@@ -320,14 +310,18 @@ export default function App({session}){
     return{pnl:pnl,trades:todayTrades.length,wins:wins,losses:losses};
   }
 
+  function isNA(val){if(!val||val.toString().trim()==="")return true;var s=val.toString().trim().toLowerCase();return s==="n/a"||s==="na"||s==="-";}
   function checkHealth(){
-    var f=activeAcc.funding;if(!f.maxDailyDD||!f.maxTotalDD)return null;
+    var f=activeAcc.funding;
+    if(isNA(f.maxDailyDD)&&isNA(f.maxTotalDD))return null;
     var today=new Date().toISOString().split("T")[0];
     var todayPnl=accTrades.filter(function(t){return t.date===today;}).reduce(function(s,t){return s+(parseFloat(t.pnl)||0);},0);
     var totalPnl=accTrades.reduce(function(s,t){return s+(parseFloat(t.pnl)||0);},0);
     var du=Math.abs(Math.min(0,todayPnl)),tl=Math.abs(Math.min(0,totalPnl));
-    var dl=parseFloat(f.maxDailyDD)||1,tlt=parseFloat(f.maxTotalDD)||1;
-    return{du:Math.round(du),dl:dl,dp:Math.round(du/dl*100),tl:Math.round(tl),tlt:tlt,tp:Math.round(tl/tlt*100)};
+    var dailyNA=isNA(f.maxDailyDD),totalNA=isNA(f.maxTotalDD);
+    var dl=dailyNA?null:parseFloat(f.maxDailyDD)||null;
+    var tlt2=totalNA?null:parseFloat(f.maxTotalDD)||null;
+    return{du:Math.round(du),dl:dl,dp:dl&&dl>0?Math.round(du/dl*100):0,dailyNA:dailyNA,tl:Math.round(tl),tlt:tlt2,tp:tlt2&&tlt2>0?Math.round(tl/tlt2*100):0,totalNA:totalNA};
   }
 
   async function saveTraderProfile(lvl,exp,prof,pl,mem){
@@ -408,17 +402,20 @@ export default function App({session}){
   }
 
   async function crearCuenta(){
-    if(newAccName.trim()){
-      var id=Date.now();
-      if(userId){
-        var r=await apiCall({saveAccount:{trader_id:userId,name:newAccName.trim(),balance:"10000",type:"Personal",risk_pct:"1",funding:{}}});
-        if(r&&r.id)id=r.id;
-      }
-      setAccounts(function(ac){return ac.concat([makeAcc(id,newAccName.trim())]);});
-      setNewAccName("");
-      setActiveAccId(id);
+  if(newAccName.trim()){
+    var id=Date.now();
+    var sizeVal=newAccSize||"10000";
+    var typeVal=newAccType||"Personal";
+    if(userId){
+      var r=await apiCall({saveAccount:{trader_id:userId,name:newAccName.trim(),balance:sizeVal,size:sizeVal,type:typeVal,risk_pct:"1",funding:{}}});
+      if(r&&r.id)id=r.id;
     }
+    var newAcc=Object.assign({},makeAcc(id,newAccName.trim()),{balance:sizeVal,size:sizeVal,type:typeVal});
+    setAccounts(function(ac){return ac.concat([newAcc]);});
+    setNewAccName("");setNewAccSize("10000");setNewAccType("Personal");
+    setActiveAccId(id);
   }
+}
 
   var stats=getStats(accTrades);
   var equity=getEquity();
@@ -515,11 +512,11 @@ export default function App({session}){
       <style>{GCSS}</style>
       <div style={{fontSize:11,letterSpacing:"0.2em",color:G,marginBottom:8,textTransform:"uppercase",fontFamily:"'Syne',sans-serif",fontWeight:700}}>Perfil de {traderName}</div>
       <div style={{fontSize:13,color:TX2,marginBottom:20}}>Nivel: <span style={{color:G,fontWeight:600}}>{traderLevel}</span> — Exp: <span style={{color:G,fontWeight:600}}>{traderExp}</span></div>
-      {profile&&profile.map(function(p,i){return(<div key={i} style={Object.assign({},styCard,{borderLeft:"3px solid "+p.color})}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}><span style={{color:TX,fontSize:14,fontWeight:600}}>{p.name}</span><span style={{padding:"3px 10px",borderRadius:20,background:p.color+"22",color:p.color,fontSize:11}}>{p.level}</span></div><div style={{fontSize:13,color:TX2,lineHeight:1.7}}>{p.desc}</div></div>);})}
+      {profile.map(function(p,i){return(<div key={i} style={Object.assign({},styCard,{borderLeft:"3px solid "+p.color})}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}><span style={{color:TX,fontSize:14,fontWeight:600}}>{p.name}</span><span style={{padding:"3px 10px",borderRadius:20,background:p.color+"22",color:p.color,fontSize:11}}>{p.level}</span></div><div style={{fontSize:13,color:TX2,lineHeight:1.7}}>{p.desc}</div></div>);})}
       <Divider />
       <div style={styCardG}>
         <div style={{color:G,fontSize:11,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:14,fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Plan personalizado para {traderName}</div>
-        {plan&&plan.map(function(t,i){return(<div key={i} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:"1px solid "+BD}}><span style={{color:G,fontSize:12,minWidth:18,fontWeight:700}}>{i+1}.</span><span style={{fontSize:13,color:TX2,lineHeight:1.7}}>{t}</span></div>);})}
+        {plan.map(function(t,i){return(<div key={i} style={{display:"flex",gap:12,padding:"10px 0",borderBottom:"1px solid "+BD}}><span style={{color:G,fontSize:12,minWidth:18,fontWeight:700}}>{i+1}.</span><span style={{fontSize:13,color:TX2,lineHeight:1.7}}>{t}</span></div>);})}
       </div>
       <button style={styBtnP} onClick={async function(){setPhase("account_setup");await saveTraderProfile(traderLevel,traderExp,profile,plan,traderMem);}}>Configurar mi cuenta →</button>
     </div>
@@ -537,7 +534,7 @@ export default function App({session}){
         <Lbl c="Riesgo por operacion (%)" /><StableInput type="number" step="0.5" min="0.1" max="10" value={activeAcc.riskPct} onChange={function(v){updAcc("riskPct",v);}} />
         <div style={{marginTop:12,padding:"12px 16px",background:"rgba(0,0,0,0.3)",borderRadius:10,fontSize:13,color:TX2,border:"1px solid "+BD}}>Riesgo por trade: <span style={{color:G,fontWeight:700,fontSize:16}}>${Math.round((parseFloat(activeAcc.balance)||0)*(parseFloat(activeAcc.riskPct)||0)/100)}</span></div>
       </div>
-      {activeAcc.type==="Empresa de fondeo"&&(<div style={styCard}><div style={{color:G,fontSize:11,textTransform:"uppercase",marginBottom:14,fontWeight:700}}>Reglas de fondeo</div><Lbl c="Empresa" /><StableInput placeholder="FTMO, The5ers..." value={activeAcc.funding.company} onChange={function(v){updFund("company",v);}} style={{marginBottom:12}} /><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><div><Lbl c="Max DD diario ($)" /><StableInput type="number" value={activeAcc.funding.maxDailyDD} onChange={function(v){updFund("maxDailyDD",v);}} /></div><div><Lbl c="Max DD total ($)" /><StableInput type="number" value={activeAcc.funding.maxTotalDD} onChange={function(v){updFund("maxTotalDD",v);}} /></div><div style={{marginTop:10}}><Lbl c="Profit target ($)" /><StableInput type="number" value={activeAcc.funding.profitTarget} onChange={function(v){updFund("profitTarget",v);}} /></div><div style={{marginTop:10}}><Lbl c="Dias minimos" /><StableInput type="number" value={activeAcc.funding.minDays} onChange={function(v){updFund("minDays",v);}} /></div></div><div style={{marginTop:12}}><Lbl c="Reglas adicionales" /><StableTextarea style={{height:70}} value={activeAcc.funding.extraRules} onChange={function(v){updFund("extraRules",v);}} placeholder="No operar NFP, max 5 trades/dia..." /></div></div>)}
+      {activeAcc.type==="Empresa de fondeo"&&(<div style={styCard}><div style={{color:G,fontSize:11,textTransform:"uppercase",marginBottom:14,fontWeight:700}}>Reglas de fondeo</div><Lbl c="Empresa" /><StableInput placeholder="FTMO, The5ers..." value={activeAcc.funding.company} onChange={function(v){updFund("company",v);}} style={{marginBottom:12}} /><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><div><Lbl c="Max DD diario ($)" /><StableInput placeholder="Ej: 500 o N/A" value={activeAcc.funding.maxDailyDD} onChange={function(v){updFund("maxDailyDD",v);}} /><div style={{fontSize:10,color:TX3,marginTop:3}}>Escribe N/A si no aplica</div></div><div><Lbl c="Max DD total ($)" /><StableInput placeholder="Ej: 1000 o N/A" value={activeAcc.funding.maxTotalDD} onChange={function(v){updFund("maxTotalDD",v);}} /><div style={{fontSize:10,color:TX3,marginTop:3}}>Escribe N/A si no aplica</div></div><div style={{marginTop:10}}><Lbl c="Profit target ($)" /><StableInput type="number" value={activeAcc.funding.profitTarget} onChange={function(v){updFund("profitTarget",v);}} /></div><div style={{marginTop:10}}><Lbl c="Dias minimos" /><StableInput type="number" value={activeAcc.funding.minDays} onChange={function(v){updFund("minDays",v);}} /></div></div><div style={{marginTop:12}}><Lbl c="Reglas adicionales" /><StableTextarea style={{height:70}} value={activeAcc.funding.extraRules} onChange={function(v){updFund("extraRules",v);}} placeholder="No operar NFP, max 5 trades/dia..." /></div></div>)}
       <button style={styBtnP} onClick={async function(){if(userId){var r=await apiCall({saveAccount:{trader_id:userId,name:activeAcc.name,balance:activeAcc.balance,type:activeAcc.type,risk_pct:activeAcc.riskPct,funding:activeAcc.funding}});if(r&&r.id)setActiveAccId(r.id);}setPhase("dashboard");}}>Entrar al diario →</button>
     </div>
   );
@@ -579,16 +576,160 @@ export default function App({session}){
         {/* ── DASHBOARD ── */}
         {phase==="dashboard"&&(
           <div>
+            {/* Row 1: Quote + Today card */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 200px",gap:14,marginBottom:16}}>
               <QuoteRotator />
               <div style={{background:"linear-gradient(135deg,rgba(212,168,67,0.1),rgba(212,168,67,0.03))",border:"1px solid "+BD2,borderRadius:14,padding:"18px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,textAlign:"center"}}>
                 <div style={{fontSize:10,color:G,textTransform:"uppercase",letterSpacing:"0.2em",fontFamily:"'Syne',sans-serif",fontWeight:700}}>Hoy</div>
                 <div style={{fontSize:30,fontWeight:800,color:todayData.pnl>=0?GREEN:RED,fontFamily:"monospace",letterSpacing:"-0.02em"}}>{todayData.pnl>=0?"+":"-"}${Math.abs(todayData.pnl)}</div>
                 <div style={{fontSize:11,color:TX2}}>{todayData.trades} trades · {todayData.wins}W {todayData.losses}L</div>
-                <button onClick={function(){setPhase("pre_trade");}} style={{marginTop:4,padding:"9px 18px",borderRadius:10,background:"linear-gradient(135deg,"+G+","+G2+")",color:DK,fontSize:12,fontWeight:700,border:"none",cursor:"pointer",boxShadow:"0 4px 16px rgba(212,168,67,0.3)",width:"100%",transition:"transform 0.2s"}} onMouseEnter={function(e){e.currentTarget.style.transform="scale(1.03)";}} onMouseLeave={function(e){e.currentTarget.style.transform="scale(1)";}}>+ Nuevo Trade</button>
+                <button onClick={function(){setPhase("pre_trade");}} style={{marginTop:4,padding:"9px 18px",borderRadius:10,background:"linear-gradient(135deg,"+G+","+G2+")",color:DK,fontSize:12,fontWeight:700,border:"none",cursor:"pointer",boxShadow:"0 4px 16px rgba(212,168,67,0.3)",width:"100%",transition:"transform 0.2s"}}
+                  onMouseEnter={function(e){e.currentTarget.style.transform="scale(1.03)";}}
+                  onMouseLeave={function(e){e.currentTarget.style.transform="scale(1)";}}>+ Nuevo Trade</button>
               </div>
             </div>
-            <div style={{fontSize:13,color:TX2,padding:"1.5rem",textAlign:"center"}}>Dashboard completo renderizado correctamente.</div>
+
+            {/* Pending alert */}
+            {pendingCount>0&&<div style={{...styCard,borderLeft:"3px solid "+G,padding:"12px 18px",marginBottom:14,cursor:"pointer",background:"rgba(212,168,67,0.04)"}} onClick={function(){setPhase("history");}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div><span style={{color:G,fontSize:13,fontWeight:600}}>{pendingCount} trade{pendingCount>1?"s":""} pendiente{pendingCount>1?"s":""} de completar</span><div style={{fontSize:11,color:TX2,marginTop:2}}>Ir al historial para llenar los datos post-trade</div></div>
+                <span style={{color:G,fontSize:20}}>›</span>
+              </div>
+            </div>}
+
+            {/* Row 2: Stats */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+              {[
+                {v:stats.wr+"%",l:"Win rate",c:G,icon:"🎯",sub:"Esta cuenta"},
+                {v:(stats.totalPnl>=0?"$":"-$")+Math.abs(stats.totalPnl),l:"P&L total",c:stats.totalPnl>=0?GREEN:RED,icon:"💰",sub:"Todos los trades"},
+                {v:stats.total,l:"Trades",c:"#A78BFA",icon:"📊",sub:"Este mes"},
+                {v:stats.avgRR+"R",l:"RR promedio",c:"#60A5FA",icon:"⚡",sub:"Risk/Reward"}
+              ].map(function(m,i){
+                return <div key={i} style={{background:S2,border:"1px solid "+BD,borderRadius:14,padding:"16px 18px",position:"relative",overflow:"hidden",transition:"transform 0.2s,border-color 0.2s",cursor:"default"}}
+                  onMouseEnter={function(e){e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=m.c+"55";}}
+                  onMouseLeave={function(e){e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.borderColor=BD;}}>
+                  <div style={{position:"absolute",top:0,right:0,width:"55%",height:"100%",background:"radial-gradient(ellipse at top right,"+m.c+"12 0%,transparent 70%)",pointerEvents:"none"}} />
+                  <div style={{fontSize:18,marginBottom:6}}>{m.icon}</div>
+                  <div style={{fontSize:26,color:m.c,fontFamily:"monospace",fontWeight:700,letterSpacing:"-0.02em"}}>{m.v}</div>
+                  <div style={{fontSize:10,color:TX2,marginTop:4,letterSpacing:"0.1em",textTransform:"uppercase"}}>{m.l}</div>
+                  <div style={{fontSize:10,color:TX3,marginTop:2}}>{m.sub}</div>
+                </div>;
+              })}
+            </div>
+
+            {/* Streak */}
+            {stats.streak>1&&<div style={{...styCard,borderLeft:"3px solid "+(stats.sType==="Win"?GREEN:RED),padding:"12px 18px",marginBottom:14,background:stats.sType==="Win"?"rgba(74,222,128,0.04)":"rgba(248,113,113,0.04)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:8,height:8,borderRadius:"50%",background:stats.sType==="Win"?GREEN:RED,boxShadow:"0 0 8px "+(stats.sType==="Win"?GREEN:RED),flexShrink:0}} />
+                <span style={{fontSize:13,color:TX2}}>Racha actual: <span style={{color:stats.sType==="Win"?GREEN:RED,fontWeight:600}}>{stats.streak} {stats.sType==="Win"?"wins consecutivos":"losses consecutivos"}</span></span>
+                {stats.sType==="Loss"&&stats.streak>=2&&<span style={{fontSize:11,color:RED}}>· Considera pausar el día</span>}
+              </div>
+            </div>}
+
+            {/* Row 3: Charts side by side */}
+            <div style={{display:"grid",gridTemplateColumns:"3fr 2fr",gap:14,marginBottom:14}}>
+              {/* Equity curve */}
+              <div style={styCard}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                  <div>
+                    <div style={{fontSize:11,color:G,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Curva de equity</div>
+                    <div style={{fontSize:11,color:TX3,marginTop:2}}>Todos los trades</div>
+                  </div>
+                  {equity.length>0&&<div style={{padding:"3px 12px",borderRadius:20,background:"rgba(74,222,128,0.12)",border:"1px solid rgba(74,222,128,0.2)",fontSize:11,color:GREEN,fontFamily:"monospace"}}>
+                    {(((equity[equity.length-1]?.balance-(parseFloat(activeAcc.balance)||10000))/(parseFloat(activeAcc.balance)||10000))*100).toFixed(1)}%
+                  </div>}
+                </div>
+                <ResponsiveContainer width="100%" height={190}>
+                  <AreaChart data={[{name:"Inicio",balance:parseFloat(activeAcc.balance)||10000}].concat(equity)}>
+                    <defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={G} stopOpacity={0.25}/><stop offset="95%" stopColor={G} stopOpacity={0}/></linearGradient></defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={BD} vertical={false}/><XAxis dataKey="name" tick={{fontSize:10,fill:TX2}} axisLine={false} tickLine={false}/><YAxis tick={{fontSize:10,fill:TX2}} domain={["auto","auto"]} axisLine={false} tickLine={false}/>
+                    <Tooltip formatter={function(v){return "$"+v;}} contentStyle={{background:S3,border:"1px solid "+BD,borderRadius:10,fontSize:11,color:TX}}/>
+                    <Area type="monotone" dataKey="balance" stroke={G} fill="url(#gg)" strokeWidth={2} dot={{fill:G,r:3,strokeWidth:0}}/>
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* PnL semanal */}
+              <div style={styCard}>
+                <div style={{fontSize:11,color:G,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:700,fontFamily:"'Syne',sans-serif",marginBottom:4}}>PnL por día</div>
+                <div style={{fontSize:11,color:TX3,marginBottom:14}}>Esta semana</div>
+                <ResponsiveContainer width="100%" height={190}>
+                  <BarChart data={weeklyPnlData} margin={{top:5,right:5,bottom:0,left:0}}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={BD} vertical={false}/>
+                    <XAxis dataKey="day" tick={{fontSize:10,fill:TX2}} axisLine={false} tickLine={false}/>
+                    <YAxis tick={{fontSize:10,fill:TX2}} axisLine={false} tickLine={false}/>
+                    <Tooltip contentStyle={{background:S3,border:"1px solid "+BD,borderRadius:8,fontSize:11,color:TX}} formatter={function(v){return ["$"+v,"PnL"];}}/>
+                    <Bar dataKey="pnl" radius={[4,4,0,0]}>
+                      {weeklyPnlData.map(function(entry,index){return <Cell key={index} fill={entry.pnl>=0?GREEN:RED} opacity={0.85}/>;}) }
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Row 4: Recent trades + Streak/Fondeo */}
+            <div style={{display:"grid",gridTemplateColumns:"3fr 2fr",gap:14,marginBottom:14}}>
+              {/* Trades recientes */}
+              <div style={styCard}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                  <div style={{fontSize:11,color:G,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Trades Recientes</div>
+                  <button onClick={function(){setPhase("history");}} style={{fontSize:11,color:TX2,background:"none",border:"none",cursor:"pointer"}}>Ver todos →</button>
+                </div>
+                {recentTrades.length===0&&<div style={{fontSize:13,color:TX3,textAlign:"center",padding:"1.5rem 0",fontStyle:"italic"}}>Aún no hay trades registrados.</div>}
+                {recentTrades.map(function(t,i){
+                  var isWin=t.result==="Win";var col=isWin?GREEN:t.result==="Loss"?RED:ORANGE;
+                  return <div key={t.id||i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",borderRadius:10,cursor:"default",borderBottom:"1px solid "+BD,transition:"background 0.2s"}}
+                    onMouseEnter={function(e){e.currentTarget.style.background=S3;}}
+                    onMouseLeave={function(e){e.currentTarget.style.background="transparent";}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{width:7,height:7,borderRadius:"50%",background:col,boxShadow:"0 0 7px "+col,flexShrink:0}} />
+                      <span style={{fontSize:13,color:TX,fontFamily:"monospace",fontWeight:500}}>{t.pair}</span>
+                      <span style={{fontSize:11,padding:"2px 8px",borderRadius:20,background:t.dir==="Long"?"rgba(74,222,128,0.12)":"rgba(248,113,113,0.12)",color:t.dir==="Long"?GREEN:RED}}>{t.dir||t.direction}</span>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:16}}>
+                      {t.emotion&&<span style={{fontSize:11,color:TX2}}>{t.emotion}</span>}
+                      {t.rr&&<span style={{fontSize:11,color:TX2,fontFamily:"monospace"}}>{t.rr}R</span>}
+                      <span style={{fontSize:13,fontFamily:"monospace",fontWeight:600,color:col}}>{isWin?"+":"-"}${Math.abs(parseFloat(t.pnl)||0)}</span>
+                    </div>
+                  </div>;
+                })}
+              </div>
+
+              {/* Racha + Fondeo */}
+              <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                {stats.streak>1&&<div style={{background:"linear-gradient(135deg,"+S2+",rgba(74,222,128,0.05))",border:"1px solid rgba(74,222,128,0.2)",borderRadius:14,padding:"18px 20px"}}>
+                  <div style={{fontSize:10,color:stats.sType==="Win"?GREEN:RED,textTransform:"uppercase",letterSpacing:"0.15em",fontFamily:"'Syne',sans-serif",fontWeight:700,marginBottom:10}}>Racha actual</div>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{fontSize:36,fontWeight:800,color:stats.sType==="Win"?GREEN:RED,fontFamily:"monospace"}}>{stats.streak}{stats.sType==="Win"?"W":"L"}</div>
+                    <div>
+                      <div style={{fontSize:13,color:TX,fontWeight:500}}>{stats.sType==="Win"?"Wins":"Losses"} consecutivos</div>
+                      <div style={{fontSize:11,color:TX2,marginTop:2}}>{stats.sType==="Win"?"Mantén el plan ✓":"Considera pausar ⚠"}</div>
+                    </div>
+                  </div>
+                </div>}
+                {health&&<div style={Object.assign({},styCard,{flex:1,marginBottom:0})}>
+                  <div style={{fontSize:10,color:G,textTransform:"uppercase",letterSpacing:"0.15em",fontFamily:"'Syne',sans-serif",fontWeight:700,marginBottom:14}}>Salud Fondeo — {activeAcc.funding.company}</div>
+                  {[{l:"DD Diario",u:health.du,lim:health.dl,p:health.dp,na:health.dailyNA},{l:"DD Total",u:health.tl,lim:health.tlt,p:health.tp,na:health.totalNA}].map(function(h){
+                    var hc=h.na?"#60A5FA":h.p>80?RED:h.p>50?ORANGE:GREEN;
+                    return <div key={h.l} style={{marginBottom:12}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:12,color:TX2}}>{h.l}</span><span style={{fontSize:12,color:hc,fontFamily:"monospace"}}>{h.na?"Sin limite":"$"+h.u+" / $"+h.lim}</span></div>
+                      {h.na?<div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:"linear-gradient(to right,#60A5FA33,#60A5FA11)",width:"100%"}}/></div>:<div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:hc,width:Math.min(100,h.p)+"%",transition:"width .6s",boxShadow:"0 0 6px "+hc+"66"}}/></div>}
+                      <div style={{fontSize:10,color:TX3,marginTop:3}}>{h.na?"Sin restriccion de DD":h.p+"% utilizado"+(h.p>80?" — PELIGRO ⚠":"")}</div>
+                    </div>;
+                  })}
+                  {activeAcc.funding.profitTarget&&<div style={{padding:"8px 12px",borderRadius:8,background:"rgba(74,222,128,0.08)",border:"1px solid rgba(74,222,128,0.15)",fontSize:11,color:GREEN}}>✓ Profit target: ${Math.max(0,stats.totalPnl)} / ${activeAcc.funding.profitTarget} ({Math.round(Math.max(0,stats.totalPnl)/parseFloat(activeAcc.funding.profitTarget)*100)}%)</div>}
+                </div>}
+              </div>
+            </div>
+
+            {/* Weekly AI */}
+            <div style={styCard}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                <div style={{fontSize:11,color:G,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Análisis semanal — Mentor IA</div>
+                <button style={styBtn} onClick={getWeeklyAI}>{weeklyLoading?"Analizando...":"Analizar semana"}</button>
+              </div>
+              {weeklyAI?<div style={{fontSize:14,color:TX2,lineHeight:1.9,whiteSpace:"pre-wrap",fontFamily:"Georgia,serif",fontStyle:"italic"}}>{weeklyAI}</div>:<div style={{fontSize:13,color:TX3,fontStyle:"italic"}}>Haz clic para obtener tu resumen inteligente de la semana.</div>}
+            </div>
           </div>
         )}
 
@@ -599,13 +740,19 @@ export default function App({session}){
             <div style={styCard}>
               <Lbl c="Estado emocional (1=muy mal / 10=peak)" />
               <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14}}>
-                <input type="range" min="1" max="10" step="1" value={preTrade.mood} onChange={function(e){setPreTrade(function(p){return Object.assign({},p,{mood:parseInt(e.target.value)});});}} style={{flex:1,accentColor:G}}/>
+                <input type="range" min={1} max={10} step={1} value={preTrade.mood} onChange={function(e){setPreTrade(function(p){return Object.assign({},p,{mood:parseInt(e.target.value)});});}} style={{flex:1,accentColor:G}}/>
                 <span style={{fontSize:22,color:G,minWidth:24,fontFamily:"monospace",fontWeight:700}}>{preTrade.mood}</span>
+                <span style={{fontSize:11,color:preTrade.mood>=7?GREEN:preTrade.mood>=4?ORANGE:RED,fontWeight:600}}>{preTrade.mood>=8?"PEAK":preTrade.mood>=6?"BIEN":preTrade.mood>=4?"REGULAR":"NO OPERAR"}</span>
               </div>
-              <Lbl c="Plan del dia" />
-              <StableTextarea style={{height:80}} placeholder="Describe tu plan..." value={preTrade.plan_text} onChange={function(v){setPreTrade(function(p){return Object.assign({},p,{plan_text:v});});}} />
+              {preTrade.mood<5&&<div style={{padding:"10px 14px",background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.3)",borderRadius:10,color:RED,fontSize:12,marginBottom:12}}>Estado emocional bajo. Operar hoy pone en riesgo tu capital.</div>}
+              <Divider />
+              <Lbl c="Sesion de mercado" /><StableSelect value={preTrade.session} onChange={function(v){setPreTrade(function(p){return Object.assign({},p,{session:v});});}} style={{marginBottom:12}}><option value="">Seleccionar...</option>{SESSIONS.map(function(s){return <option key={s}>{s}</option>;})}</StableSelect>
+              <Lbl c="Bias del dia" />
+              <div style={{display:"flex",gap:8,marginBottom:12}}>{["Alcista","Bajista","Neutral"].map(function(b){return <button key={b} onClick={function(){setPreTrade(function(p){return Object.assign({},p,{bias:b});});}} style={Object.assign({},styBtn,{flex:1,borderColor:preTrade.bias===b?G:BD,color:preTrade.bias===b?G:TX2,background:preTrade.bias===b?"rgba(212,168,67,0.08)":"transparent"})}>{b}</button>;})}</div>
+              <Lbl c="Niveles clave" /><StableInput style={{marginBottom:12}} placeholder="Soporte 1.0820, Resistencia 1.0900..." value={preTrade.levels} onChange={function(v){setPreTrade(function(p){return Object.assign({},p,{levels:v});});}} />
+              <Lbl c="Plan del dia" /><StableTextarea style={{height:80}} placeholder="Describe tu plan para esta sesion..." value={preTrade.plan_text} onChange={function(v){setPreTrade(function(p){return Object.assign({},p,{plan_text:v});});}} />
             </div>
-            <button style={styBtnP} onClick={function(){setSavedPre(true);setPhase("during_trade");}}>Guardar y empezar →</button>
+            <button style={styBtnP} onClick={function(){setSavedPre(true);setPhase("during_trade");}}>Guardar y empezar a operar →</button>
           </div>
         )}
 
@@ -613,20 +760,30 @@ export default function App({session}){
         {phase==="during_trade"&&(
           <div>
             <SecLabel c="Registrar operacion" />
+            {savedPre&&<div style={Object.assign({},styCard,{borderLeft:"3px solid "+G,padding:"10px 16px",fontSize:12,marginBottom:14,background:"rgba(212,168,67,0.04)"})}><span style={{color:G,fontWeight:600}}>Plan activo</span><span style={{color:TX2,marginLeft:10}}>Bias: {preTrade.bias} — {preTrade.session} — Estado: {preTrade.mood}/10</span></div>}
             <div style={styCard}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                <div><Lbl c="Par" /><StableSelect value={curTrade.pair} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{pair:v});});}}><option value="">Seleccionar...</option>{ALL_PAIRS.map(function(p){return <option key={p}>{p}</option>;})}</StableSelect></div>
-                <div><Lbl c="Direccion" /><div style={{display:"flex",gap:8}}>{["Long","Short"].map(function(d){return <button key={d} onClick={function(){setCurTrade(function(t){return Object.assign({},t,{dir:d});});}} style={Object.assign({},styBtn,{flex:1,borderColor:curTrade.dir===d?G:BD,color:curTrade.dir===d?G:TX2})}>{d}</button>;})}</div></div>
+                <div><Lbl c="Activo / Par" /><StableSelect value={curTrade.pair} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{pair:v});});}}><option value="">Seleccionar...</option>{ALL_PAIRS.map(function(p){return <option key={p}>{p}</option>;})}</StableSelect></div>
+                <div><Lbl c="Direccion" /><div style={{display:"flex",gap:8}}>{["Long","Short"].map(function(d){var isActive=curTrade.dir===d;var col=d==="Long"?GREEN:RED;return <button key={d} onClick={function(){setCurTrade(function(t){return Object.assign({},t,{dir:d});});}} style={Object.assign({},styBtn,{flex:1,borderColor:isActive?col:BD,color:isActive?col:TX2,background:isActive?(d==="Long"?"rgba(74,222,128,0.08)":"rgba(248,113,113,0.08)"):"transparent"})}>{d}</button>;})}</div></div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:12}}>
-                <div><Lbl c="Entrada" /><StableInput type="number" step="any" value={curTrade.entry} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{entry:v});});}} /></div>
-                <div><Lbl c="SL" /><StableInput type="number" step="any" value={curTrade.sl} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{sl:v});});}} /></div>
-                <div><Lbl c="TP" /><StableInput type="number" step="any" value={curTrade.tp} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{tp:v});});}} /></div>
-                <div><Lbl c="Resultado" /><StableSelect value={curTrade.result} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{result:v});});}}><option value="">-</option><option>Win</option><option>Loss</option><option>BE</option></StableSelect></div>
-                <div><Lbl c="P&L" /><StableInput type="number" value={curTrade.pnl} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{pnl:v});});}} /></div>
+                <div><Lbl c="Entrada" /><StableInput type="number" step="any" placeholder="0.00" value={curTrade.entry} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{entry:v});});}} /></div>
+                <div><Lbl c="RR estimado" /><div style={{padding:"10px 14px",background:"rgba(0,0,0,0.4)",borderRadius:10,fontSize:16,color:G,border:"1px solid "+BD,fontFamily:"monospace",fontWeight:700}}>{curTrade.entry&&curTrade.sl&&curTrade.tp?Math.abs((parseFloat(curTrade.tp)-parseFloat(curTrade.entry))/(parseFloat(curTrade.entry)-parseFloat(curTrade.sl))).toFixed(2)+"R":"—"}</div></div>
+                <div style={{marginTop:10}}><Lbl c="Stop Loss" /><StableInput type="number" step="any" placeholder="0.00" value={curTrade.sl} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{sl:v});});}} /></div>
+                <div style={{marginTop:10}}><Lbl c="Take Profit" /><StableInput type="number" step="any" placeholder="0.00" value={curTrade.tp} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{tp:v});});}} /></div>
+                <div style={{marginTop:10}}><Lbl c="Resultado" /><StableSelect value={curTrade.result} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{result:v});});}}><option value="">Seleccionar...</option><option>Win</option><option>Loss</option><option>BE</option></StableSelect></div>
+                <div style={{marginTop:10}}><Lbl c="P&L ($)" /><StableInput type="number" placeholder="0" value={curTrade.pnl} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{pnl:v});});}} /></div>
               </div>
+              <Divider />
+              <Lbl c="Emocion durante el trade" />
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>{EMOTIONS.map(function(em){return <button key={em} onClick={function(){setCurTrade(function(t){return Object.assign({},t,{emotion:em});});}} style={Object.assign({},styBtn,{padding:"5px 12px",fontSize:11,borderColor:curTrade.emotion===em?G:BD,color:curTrade.emotion===em?G:TX2,background:curTrade.emotion===em?"rgba(212,168,67,0.08)":"transparent"})}>{em}</button>;})}</div>
+              <Lbl c="Seguiste el plan?" />
+              <div style={{display:"flex",gap:8,marginBottom:14}}>{[true,false].map(function(v){return <button key={String(v)} onClick={function(){setCurTrade(function(t){return Object.assign({},t,{followed:v});});}} style={Object.assign({},styBtn,{borderColor:curTrade.followed===v?G:BD,color:curTrade.followed===v?G:TX2,background:curTrade.followed===v?"rgba(212,168,67,0.08)":"transparent"})}>{v?"Si":"No"}</button>;})}</div>
+              <Lbl c="Errores cometidos" />
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>{ERRORS.map(function(err){var isActive=(curTrade.errors||[]).includes(err);return <button key={err} onClick={function(){setCurTrade(function(t){var e=t.errors||[];return Object.assign({},t,{errors:e.includes(err)?e.filter(function(x){return x!==err;}):[].concat(e,[err])});});}} style={Object.assign({},styBtn,{padding:"5px 12px",fontSize:11,borderColor:isActive?G:BD,color:isActive?G:TX2,background:isActive?"rgba(212,168,67,0.08)":"transparent"})}>{err}</button>;})}</div>
+              <Lbl c="Notas" /><StableTextarea style={{height:60}} placeholder="Que observaste?" value={curTrade.notes} onChange={function(v){setCurTrade(function(t){return Object.assign({},t,{notes:v});});}} />
             </div>
-            <button style={Object.assign({},styBtnP,{opacity:curTrade.pair&&curTrade.result?1:0.35})} onClick={function(){if(curTrade.pair&&curTrade.result)saveTrade();}}>Guardar →</button>
+            <button style={Object.assign({},styBtnP,{opacity:curTrade.pair&&curTrade.result?1:0.35})} onClick={function(){if(curTrade.pair&&curTrade.result)saveTrade();}}>Guardar y obtener análisis IA →</button>
           </div>
         )}
 
@@ -634,33 +791,118 @@ export default function App({session}){
         {phase==="post_trade"&&(
           <div>
             <SecLabel c="Analisis post-trade" />
-            {aiFeedback&&<div style={styCardG}><div style={{fontSize:14,color:TX2,lineHeight:1.9}}>{aiFeedback}</div></div>}
-            <button style={styBtnP} onClick={function(){setPhase("dashboard");}}>Volver al panel</button>
+            {aiLoading&&<div style={Object.assign({},styCardG,{textAlign:"center",padding:"2.5rem"})}><div style={{color:TX2,fontSize:13,letterSpacing:"0.12em"}}>Tu mentor está analizando la operación...</div></div>}
+            {aiFeedback&&!aiLoading&&<div style={Object.assign({},styCardG,{borderLeft:"3px solid "+G})}><div style={{fontSize:11,color:G,marginBottom:14,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Análisis de tu mentor</div><div style={{fontSize:14,color:TX2,lineHeight:1.9,whiteSpace:"pre-wrap",fontFamily:"Georgia,serif",fontStyle:"italic"}}>{aiFeedback}</div></div>}
+            <div style={{display:"flex",gap:10,marginTop:14,flexWrap:"wrap"}}>
+              <button style={styBtnP} onClick={function(){setCurTrade({pair:"",dir:"Long",entry:"",sl:"",tp:"",result:"",pnl:"",emotion:"Calmado",followed:true,errors:[],notes:""});setPhase("during_trade");}}>Registrar otra operación</button>
+              <button style={styBtn} onClick={function(){setPhase("dashboard");}}>Ver panel</button>
+              <button style={styBtn} onClick={function(){setPhase("chat");}}>Hablar con mentor</button>
+            </div>
           </div>
         )}
 
         {/* ── HISTORY ── */}
         {phase==="history"&&(
           <div>
-            <SecLabel c="Historial de trades" />
-            {accTrades.length===0&&<div style={{fontSize:13,color:TX3,textAlign:"center",padding:"2rem"}}>Sin trades aún</div>}
+            <SecLabel c={"Historial — "+activeAcc.name} />
+            {pendingCount>0&&(
+              <div style={{marginBottom:18}}>
+                <div style={{fontSize:11,color:G,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:10,fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Trades pendientes de completar ({pendingCount})</div>
+                {pendingTrades.map(function(t){
+                  var isExpanded=expandedId===t.id;
+                  var col=t.result==="Win"?G:t.result==="Loss"?RED:ORANGE;
+                  return(
+                    <div key={t.id} style={{marginBottom:10}}>
+                      <div onClick={function(){setExpandedId(isExpanded?null:t.id);setFillEmotion("Calmado");setFillFollowed(true);setFillNotes("");}} style={{...styCard,borderLeft:"3px solid "+G,cursor:"pointer",marginBottom:0,background:isExpanded?"rgba(212,168,67,0.04)":S2}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:10}}>
+                            <span style={{padding:"3px 8px",borderRadius:6,background:"rgba(212,168,67,0.15)",color:G,fontSize:10,letterSpacing:"0.06em",fontWeight:600}}>PENDIENTE</span>
+                            <span style={{fontSize:14,color:TX,fontWeight:500}}>{t.pair}</span>
+                            <span style={{fontSize:12,color:t.dir==="Long"?GREEN:RED}}>{t.dir||t.direction}</span>
+                          </div>
+                          <div style={{display:"flex",alignItems:"center",gap:10}}>
+                            <span style={{color:col,fontSize:13,fontFamily:"monospace",fontWeight:600}}>${t.pnl}</span>
+                            <span style={{color:TX3,fontSize:16}}>{isExpanded?"▲":"▼"}</span>
+                          </div>
+                        </div>
+                        <div style={{fontSize:11,color:TX2,marginTop:4}}>{t.date} — Entrada: {t.entry} — Salida: {t.exit_price} — {t.lot_size} lots — {t.duration}</div>
+                      </div>
+                      {isExpanded&&(
+                        <div style={{...styCardG,borderRadius:"0 0 12px 12px",borderTop:"none",marginTop:0}}>
+                          <Lbl c="Como te sentiste durante el trade?" />
+                          <StableSelect value={fillEmotion} onChange={function(v){setFillEmotion(v);}} style={{marginBottom:12}}>
+                            {EMOTIONS.map(function(em){return <option key={em}>{em}</option>;})}
+                          </StableSelect>
+                          <Lbl c="Seguiste tu plan de trading?" />
+                          <div style={{display:"flex",gap:8,marginBottom:12}}>
+                            {[true,false].map(function(v){return <button key={String(v)} onClick={function(){setFillFollowed(v);}} style={Object.assign({},styBtn,{flex:1,borderColor:fillFollowed===v?G:BD,color:fillFollowed===v?G:TX2,background:fillFollowed===v?"rgba(212,168,67,0.08)":"transparent"})}>{v?"Si":"No"}</button>;})}
+                          </div>
+                          <Lbl c="Comentario (opcional)" />
+                          <StableTextarea style={{height:60,marginBottom:12}} placeholder="Que observaste en este trade?" value={fillNotes} onChange={function(v){setFillNotes(v);}}/>
+                          <button style={Object.assign({},styBtnP,{width:"100%"})} onClick={function(){completePendingTrade(t);}}>Guardar y obtener análisis IA →</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                <Divider />
+              </div>
+            )}
+            {accTrades.length===0&&pendingCount===0&&<div style={{fontSize:13,color:TX3,textAlign:"center",padding:"2rem",fontStyle:"italic"}}>No hay operaciones en esta cuenta aún.</div>}
             {accTrades.slice().reverse().map(function(t){
-              return(<div key={t.id} style={Object.assign({},styCard,{borderLeft:"3px solid "+(t.result==="Win"?GREEN:RED)})}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:TX,fontWeight:600}}>{t.pair}</span><span style={{color:t.result==="Win"?GREEN:RED,fontWeight:700}}>{t.result} ${t.pnl}</span></div></div>);
+              var col=t.result==="Win"?G:t.result==="Loss"?RED:ORANGE;
+              return(
+                <div key={t.id} style={Object.assign({},styCard,{borderLeft:"3px solid "+col})}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                    <div style={{fontSize:14,color:TX,fontWeight:500}}>{t.pair} <span style={{fontSize:12,color:TX2,fontWeight:400}}>{t.dir||t.direction}</span></div>
+                    <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                      <span style={{padding:"3px 10px",borderRadius:20,background:col+"22",color:col,fontSize:11,fontWeight:600}}>{t.result}</span>
+                      <span style={{color:t.result==="Win"?GREEN:RED,fontSize:14,fontFamily:"monospace",fontWeight:700}}>{t.result==="Win"?"+":"-"}${Math.abs(parseFloat(t.pnl)||0)}</span>
+                    </div>
+                  </div>
+                  <div style={{fontSize:11,color:TX2}}>{t.date}{t.exit_price?" — Salida: "+t.exit_price:""}{t.lot_size?" — "+t.lot_size+" lots":""}{t.duration?" — "+t.duration:""}{t.emotion?" — "+t.emotion:""}{t.followed!==undefined?" — "+(t.followed?"Siguió el plan":"No siguió el plan"):""}</div>
+                  {t.notes&&<div style={{fontSize:11,color:TX2,marginTop:4,fontStyle:"italic"}}>{t.notes}</div>}
+                </div>
+              );
             })}
           </div>
         )}
 
-        {/* ── LOT CALC ── */}
+        {/* ── LOT CALCULATOR ── */}
         {phase==="lot_calc"&&(
           <div>
             <SecLabel c="Calculadora de tamano de posicion" />
             <div style={styCard}>
-              <Lbl c="Balance" /><StableInput type="number" value={lc.balance} onChange={function(v){setLc(function(l){return Object.assign({},l,{balance:v});});}} style={{marginBottom:12}} />
-              <Lbl c="Riesgo %" /><StableInput type="number" value={lc.riskPct} onChange={function(v){setLc(function(l){return Object.assign({},l,{riskPct:v});});}} style={{marginBottom:12}} />
-              <div style={{padding:"20px",background:"rgba(0,0,0,0.3)",borderRadius:12,textAlign:"center"}}>
-                <div style={{fontSize:11,color:TX2,marginBottom:4}}>Riesgo recomendado</div>
-                <div style={{fontSize:28,color:G,fontFamily:"monospace",fontWeight:700}}>${Math.round((parseFloat(lc.balance)||0)*(parseFloat(lc.riskPct)||0)/100)}</div>
+              <Lbl c="Mercado" />
+              <div style={{display:"flex",gap:8,marginBottom:14}}>{["Forex/CFD","Futuros","Crypto"].map(function(m){return <button key={m} onClick={function(){setLc(function(l){return Object.assign({},l,{market:m,asset:m==="Futuros"?Object.keys(FUTURES)[0]:m==="Forex/CFD"?Object.keys(FOREX)[0]:CRYPTO_LIST[0],slMode:m==="Futuros"?"puntos":"pips",slVal:"20"});});}} style={Object.assign({},styBtn,{flex:1,borderColor:lc.market===m?G:BD,color:lc.market===m?G:TX2,background:lc.market===m?"rgba(212,168,67,0.1)":"transparent",fontSize:12})}>{m}</button>;})}</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+                <div><Lbl c="Activo" /><StableSelect value={lc.asset} onChange={function(v){setLc(function(l){return Object.assign({},l,{asset:v});});}}>
+                  {lc.market==="Futuros"&&Object.keys(FUTURES).map(function(k){return <option key={k}>{k}</option>;})}
+                  {lc.market==="Forex/CFD"&&Object.keys(FOREX).map(function(k){return <option key={k}>{k}</option>;})}
+                  {lc.market==="Crypto"&&CRYPTO_LIST.map(function(k){return <option key={k}>{k}</option>;})}
+                </StableSelect></div>
+                {lc.market==="Futuros"&&FUTURES[lc.asset]&&<div style={{padding:"10px 14px",background:"rgba(0,0,0,0.3)",borderRadius:10,border:"1px solid "+BD,fontSize:11,color:TX2,display:"flex",flexDirection:"column",justifyContent:"center"}}><div style={{color:G,marginBottom:2,fontWeight:600}}>{FUTURES[lc.asset].note}</div><div>${FUTURES[lc.asset].dpp}/punto — tick ${FUTURES[lc.asset].tv}</div></div>}
+                {lc.market==="Forex/CFD"&&<div style={{padding:"10px 14px",background:"rgba(0,0,0,0.3)",borderRadius:10,border:"1px solid "+BD,fontSize:11,color:TX2,display:"flex",flexDirection:"column",justifyContent:"center"}}><div style={{color:G,marginBottom:2,fontWeight:600}}>Valor del pip (1 lot)</div><div>${(FOREX[lc.asset]||{pv:10}).pv} por pip por lote</div></div>}
               </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+                <div><Lbl c="Balance ($)" /><StableInput type="number" value={lc.balance} onChange={function(v){setLc(function(l){return Object.assign({},l,{balance:v});});}} /></div>
+                <div><Lbl c="Riesgo (%)" /><StableInput type="number" step="0.5" min="0.1" max="10" value={lc.riskPct} onChange={function(v){setLc(function(l){return Object.assign({},l,{riskPct:v});});}} /></div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+                <div><Lbl c="Medir SL en" /><StableSelect value={lc.slMode} onChange={function(v){setLc(function(l){return Object.assign({},l,{slMode:v});}); }}>
+                  {lc.market==="Futuros"&&<><option value="puntos">Puntos</option><option value="ticks">Ticks</option><option value="usd">USD ($)</option></>}
+                  {lc.market==="Forex/CFD"&&<><option value="pips">Pips</option><option value="puntos">Puntos</option><option value="usd">USD ($)</option></>}
+                  {lc.market==="Crypto"&&<option value="usd">USD por unidad</option>}
+                </StableSelect></div>
+                <div><Lbl c={"SL en "+lc.slMode} /><StableInput type="number" step="any" value={lc.slVal} onChange={function(v){setLc(function(l){return Object.assign({},l,{slVal:v});});}} /></div>
+              </div>
+              <div style={{padding:"20px",background:"rgba(0,0,0,0.35)",borderRadius:12,border:"1px solid "+BD2,textAlign:"center",marginBottom:14}}>
+                {lc.market==="Futuros"&&<div><div style={{fontSize:11,color:TX2,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}}>Contratos recomendados</div><div style={{fontSize:40,color:G,fontFamily:"monospace",fontWeight:700}}>{posResult.contracts||0}</div><div style={{fontSize:11,color:TX2,marginTop:4}}>Riesgo por contrato: ${posResult.rpc||0} — Stop: {posResult.pts||0} pts<br/>Riesgo total: <span style={{color:G,fontWeight:600}}>${posResult.total||0}</span></div></div>}
+                {lc.market==="Forex/CFD"&&<div><div style={{fontSize:11,color:TX2,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}}>Tamaño de posición</div><div style={{fontSize:40,color:G,fontFamily:"monospace",fontWeight:700}}>{posResult.lots||0} <span style={{fontSize:18}}>lots</span></div><div style={{fontSize:11,color:TX2,marginTop:4}}>Valor del pip: ${posResult.pvpl||0}/pip — Stop: {posResult.pips||0} pips<br/>Riesgo real: <span style={{color:G,fontWeight:600}}>${posResult.total||0}</span></div></div>}
+                {lc.market==="Crypto"&&<div><div style={{fontSize:11,color:TX2,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:4}}>Unidades</div><div style={{fontSize:40,color:G,fontFamily:"monospace",fontWeight:700}}>{posResult.units||0}</div><div style={{fontSize:11,color:TX2,marginTop:4}}>Riesgo total: <span style={{color:G,fontWeight:600}}>${posResult.total||0}</span></div></div>}
+              </div>
+              <div style={{fontSize:11,color:TX2,letterSpacing:"0.1em",marginBottom:10,textTransform:"uppercase",fontWeight:600}}>Tabla de riesgo rápido</div>
+              {[0.5,1,1.5,2].map(function(r){var res=calcPos({market:lc.market,asset:lc.asset,balance:lc.balance,riskPct:String(r),slMode:lc.slMode,slVal:lc.slVal});return(<div key={r} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid "+BD,fontSize:12}}><span style={{color:TX2}}>{r}% — ${Math.round((parseFloat(lc.balance)||0)*r/100)}</span><span style={{color:TX}}>{lc.market==="Futuros"&&((res.contracts||0)+" contratos")}{lc.market==="Forex/CFD"&&((res.lots||0)+" lots")}{lc.market==="Crypto"&&((res.units||0)+" unidades")}<span style={{color:G,marginLeft:8,fontFamily:"monospace",fontWeight:600}}>${Math.round((parseFloat(lc.balance)||0)*r/100)}</span></span></div>);})}
             </div>
           </div>
         )}
@@ -668,46 +910,99 @@ export default function App({session}){
         {/* ── FUNDING RULES ── */}
         {phase==="funding_rules"&&(
           <div>
-            <SecLabel c="Reglas de fondeo" />
+            <SecLabel c={"Fondeo — "+activeAcc.name} />
             <div style={styCard}>
-              <Lbl c="Empresa" /><StableInput value={activeAcc.funding.company} onChange={function(v){updFund("company",v);}} style={{marginBottom:12}} placeholder="FTMO..." />
-              <Lbl c="Max DD diario" /><StableInput type="number" value={activeAcc.funding.maxDailyDD} onChange={function(v){updFund("maxDailyDD",v);}} style={{marginBottom:12}} />
-              <Lbl c="Max DD total" /><StableInput type="number" value={activeAcc.funding.maxTotalDD} onChange={function(v){updFund("maxTotalDD",v);}} />
+              <Lbl c="Empresa" /><StableInput style={{marginBottom:12}} placeholder="FTMO, The5ers..." value={activeAcc.funding.company} onChange={function(v){updFund("company",v);}} />
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <div><Lbl c="Max DD diario ($)" /><StableInput placeholder="Ej: 500 o N/A" value={activeAcc.funding.maxDailyDD} onChange={function(v){updFund("maxDailyDD",v);}} /><div style={{fontSize:10,color:TX3,marginTop:3}}>Escribe N/A si no aplica</div></div>
+                <div><Lbl c="Max DD total ($)" /><StableInput placeholder="Ej: 1000 o N/A" value={activeAcc.funding.maxTotalDD} onChange={function(v){updFund("maxTotalDD",v);}} /><div style={{fontSize:10,color:TX3,marginTop:3}}>Escribe N/A si no aplica</div></div>
+                <div style={{marginTop:10}}><Lbl c="Profit target ($)" /><StableInput type="number" value={activeAcc.funding.profitTarget} onChange={function(v){updFund("profitTarget",v);}} /></div>
+                <div style={{marginTop:10}}><Lbl c="Dias minimos" /><StableInput type="number" value={activeAcc.funding.minDays} onChange={function(v){updFund("minDays",v);}} /></div>
+              </div>
+              <div style={{marginTop:12}}><Lbl c="Reglas adicionales" /><StableTextarea style={{height:80}} value={activeAcc.funding.extraRules} onChange={function(v){updFund("extraRules",v);}} placeholder="No operar NFP, max 5 trades/dia..." /></div>
             </div>
-          </div>
-        )}
-
-        {/* ── CHAT ── */}
-        {phase==="chat"&&(
-          <div>
-            <SecLabel c="Mentor IA" />
-            <div style={Object.assign({},styCard,{height:"400px",overflowY:"auto",marginBottom:12})}>
-              {chatMsgs.map(function(m,i){
-                return(<div key={i} style={{marginBottom:12,textAlign:m.role==="assistant"?"left":"right"}}><div style={{display:"inline-block",maxWidth:"80%",padding:"10px 14px",borderRadius:10,background:m.role==="assistant"?S2:"rgba(212,168,67,0.15)",color:TX,fontSize:13}}>{m.content}</div></div>);
-              })}
-              <div ref={chatEndRef} />
-            </div>
-            <div style={{display:"flex",gap:8}}>
-              <StableInput ref={chatInputRef} value={chatInput} onChange={function(v){setChatInput(v);}} placeholder="Tu mensaje..." />
-              <button style={styBtnP} onClick={sendChat}>Enviar</button>
-            </div>
+            {health&&<div style={styCard}><div style={{fontSize:11,color:G,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.1em",fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Estado actual</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>{[{l:"DD diario",u:health.du,lim:health.dl,p:health.dp,na:health.dailyNA},{l:"DD total",u:health.tl,lim:health.tlt,p:health.tp,na:health.totalNA}].map(function(h){var hc=h.na?"#60A5FA":h.p>80?RED:h.p>50?ORANGE:GREEN;return <div key={h.l}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:12,color:TX2}}>{h.l}</span><span style={{fontSize:12,color:hc,fontFamily:"monospace"}}>{h.na?"Sin limite":"$"+h.u+" / $"+h.lim}</span></div>{h.na?<div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:"linear-gradient(to right,#60A5FA33,#60A5FA11)",width:"100%"}}/></div>:<div style={{height:5,background:S3,borderRadius:3}}><div style={{height:5,borderRadius:3,background:hc,width:Math.min(100,h.p)+"%",transition:"width .6s",boxShadow:"0 0 6px "+hc+"66"}}/></div>}<div style={{fontSize:10,color:TX3,marginTop:3}}>{h.na?"Sin restriccion":h.p+"%"+(h.p>80?" — PELIGRO ⚠":"")}</div></div>;})}</div>{activeAcc.funding.profitTarget&&<div style={{marginTop:12,fontSize:13,color:TX2}}>Hacia el objetivo: <span style={{color:G,fontWeight:600}}>${Math.max(0,stats.totalPnl)} / ${activeAcc.funding.profitTarget} ({Math.round(Math.max(0,stats.totalPnl)/parseFloat(activeAcc.funding.profitTarget)*100)}%)</span></div>}</div>}
+            <button style={styBtnP} onClick={async function(){if(userId){await apiCall({saveAccount:{trader_id:userId,name:activeAcc.name,balance:activeAcc.balance,type:activeAcc.type,risk_pct:activeAcc.riskPct,funding:activeAcc.funding}});}setPhase("dashboard");}}>Guardar</button>
           </div>
         )}
 
         {/* ── ACCOUNTS ── */}
-        {phase==="accounts"&&(
+        {{phase==="accounts"&&(
+  <div>
+    <SecLabel c="Gestion de cuentas" />
+    {accounts.map(function(a){return(
+      <div key={a.id} style={Object.assign({},styCard,{borderLeft:"3px solid "+(activeAccId===a.id?G:BD)})}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <span style={{color:activeAccId===a.id?G:TX,fontSize:14,fontWeight:activeAccId===a.id?600:400}}>{a.name}</span>
+          <div style={{display:"flex",gap:8}}>
+            {activeAccId!==a.id&&<button style={Object.assign({},styBtn,{padding:"4px 12px",fontSize:11})} onClick={function(){setActiveAccId(a.id);}}>Activar</button>}
+            {accounts.length>1&&<button style={Object.assign({},styBtn,{padding:"4px 12px",fontSize:11,borderColor:RED,color:RED})} onClick={function(){setAccounts(function(ac){return ac.filter(function(x){return x.id!==a.id;});});}}>Eliminar</button>}
+          </div>
+        </div>
+        <div style={{fontSize:12,color:TX2}}>Saldo: <span style={{color:G,fontWeight:600}}>${a.balance}</span> — Riesgo: {a.riskPct}% — {a.type}</div>
+      </div>
+    );})}
+    <div style={styCardG}>
+      <div style={{color:G,fontSize:11,textTransform:"uppercase",marginBottom:16,fontWeight:700,fontFamily:"'Syne',sans-serif"}}>Agregar nueva cuenta</div>
+      <Lbl c="Nombre de la cuenta" />
+      <StableInput value={newAccName} onChange={function(v){setNewAccName(v);}} placeholder="Ej: FTMO 50K, Cuenta Real..." style={{marginBottom:14}} />
+      <Lbl c="Tamaño de la cuenta (USD)" />
+      <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+        {ACCOUNT_SIZES.map(function(s){
+          var num=s.replace(",","");
+          var isActive=newAccSize===num;
+          return <button key={s} onClick={function(){setNewAccSize(num);}} style={Object.assign({},styBtn,{padding:"5px 12px",fontSize:11,borderColor:isActive?G:BD,color:isActive?G:TX2,background:isActive?"rgba(212,168,67,0.08)":"transparent"})}>${s}</button>;
+        })}
+      </div>
+      <StableInput type="number" value={newAccSize} onChange={function(v){setNewAccSize(v);}} placeholder="O escribe el monto exacto..." style={{marginBottom:14}} />
+      <Lbl c="Tipo de cuenta" />
+      <StableSelect value={newAccType} onChange={function(v){setNewAccType(v);}} style={{marginBottom:16}}>
+        <option>Personal</option><option>Empresa de fondeo</option>
+      </StableSelect>
+      {newAccSize&&<div style={{padding:"10px 14px",background:"rgba(0,0,0,0.3)",borderRadius:10,fontSize:12,color:TX2,border:"1px solid "+BD,marginBottom:14}}>
+        Con riesgo del 1% → <span style={{color:G,fontWeight:700}}>${Math.round((parseFloat(newAccSize)||0)*0.01)}</span> por trade
+      </div>}
+      <button style={styBtnP} onClick={function(){crearCuenta();}}>Crear cuenta</button>
+    </div>
+  </div> 
+)}
+
+        {/* ── CHAT / MENTOR IA ── */}
+        {phase==="chat"&&(
           <div>
-            <SecLabel c="Mis cuentas de trading" />
-            {accounts.map(function(a){
-              return(<div key={a.id} style={styCard}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{color:TX,fontWeight:600}}>{a.name}</div><div style={{fontSize:12,color:TX2,marginTop:4}}>${a.balance}</div></div><button onClick={function(){setActiveAccId(a.id);}} style={{padding:"6px 12px",borderRadius:8,background:activeAccId===a.id?"rgba(212,168,67,0.2)":"transparent",color:G,fontSize:11,border:"1px solid "+G}}>Seleccionar</button></div></div>);
-            })}
-            <div style={styCard}>
-              <Lbl c="Nueva cuenta" /><StableInput value={newAccName} onChange={function(v){setNewAccName(v);}} placeholder="Nombre..." style={{marginBottom:10}} /><button style={styBtnP} onClick={crearCuenta}>Crear →</button>
+            <SecLabel c="Mentor IA" />
+            <div style={{fontSize:13,color:TX2,marginBottom:16,lineHeight:1.7}}>Tu coach personal de trading y psicología del rendimiento — siempre disponible para <span style={{color:G,fontWeight:600}}>{traderName}</span></div>
+            <div style={Object.assign({},styCard,{padding:0,overflow:"hidden"})}>
+              <div style={{height:420,overflowY:"auto",padding:"1.25rem",display:"flex",flexDirection:"column",gap:12}}>
+                {chatMsgs.map(function(m,i){return(<div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}><div style={{maxWidth:"82%",padding:"11px 16px",borderRadius:m.role==="user"?"14px 14px 3px 14px":"14px 14px 14px 3px",background:m.role==="user"?"rgba(212,168,67,0.12)":S3,border:"1px solid "+(m.role==="user"?BD2:BD),fontSize:13,color:m.role==="user"?TX:TX2,lineHeight:1.85,whiteSpace:"pre-wrap",fontFamily:m.role==="assistant"?"Georgia,serif":"inherit"}}>{m.content}</div></div>);})}
+                {chatLoading&&<div style={{display:"flex",justifyContent:"flex-start"}}><div style={{padding:"11px 16px",borderRadius:"14px 14px 14px 3px",background:S3,border:"1px solid "+BD,fontSize:13,color:TX3,fontStyle:"italic"}}>Escribiendo...</div></div>}
+                <div ref={chatEndRef} />
+              </div>
+              <div style={{borderTop:"1px solid "+BD,padding:"12px 16px",display:"flex",gap:10,background:S2}}>
+                <input ref={chatInputRef} value={chatInput} onChange={function(e){setChatInput(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}}} placeholder="Escríbele a tu mentor..." style={Object.assign({},styInp,{flex:1,margin:0})} disabled={chatLoading} />
+                <button onClick={sendChat} disabled={chatLoading||!chatInput.trim()} style={Object.assign({},styBtnP,{padding:"9px 22px",opacity:chatLoading||!chatInput.trim()?0.35:1})}>Enviar</button>
+              </div>
+            </div>
+            <div style={{marginTop:12,display:"flex",flexWrap:"wrap",gap:6}}>
+              {["Como mejorar mi disciplina?","Me siento frustrado hoy","Que errores debo corregir?","Necesito motivacion"].map(function(txt){return <button key={txt} onClick={function(){setChatInput(txt);}} style={{padding:"6px 14px",borderRadius:20,border:"1px solid "+BD,background:"transparent",color:TX2,fontSize:11,cursor:"pointer",transition:"all 0.2s"}}
+                onMouseEnter={function(e){e.currentTarget.style.borderColor=G;e.currentTarget.style.color=G;}}
+                onMouseLeave={function(e){e.currentTarget.style.borderColor=BD;e.currentTarget.style.color=TX2;}}>{txt}</button>;})}
             </div>
           </div>
         )}
 
       </div>
+
+      {/* TICKER BOTTOM */}
+      <div style={{position:"fixed",bottom:0,left:0,right:0,height:28,background:"rgba(7,7,10,0.96)",borderTop:"1px solid "+BD,display:"flex",alignItems:"center",overflow:"hidden",zIndex:50}}>
+        <div style={{display:"flex",gap:44,animation:"ticker 32s linear infinite",whiteSpace:"nowrap"}}>
+          {[...TICKER_ITEMS,...TICKER_ITEMS].map(function(t,i){return(
+            <span key={i} style={{fontSize:10,color:TX2}}>
+              <span style={{color:TX3,marginRight:5}}>{t.label}</span>
+              <span style={{color:t.up?GREEN:RED,fontFamily:"monospace"}}>{t.up?"▲":"▼"} {t.v}</span>
+            </span>
+          );}) }
+        </div>
+      </div>
     </div>
-  );
-}
+  )}
