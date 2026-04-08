@@ -927,7 +927,7 @@ export default function App({session}){
         )}
 
         {/* ── ACCOUNTS ── */}
-        {{phase==="accounts"&&(
+        {phase==="accounts"&&(
   <div>
     <SecLabel c="Gestion de cuentas" />
     {accounts.map(function(a){return(
